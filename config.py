@@ -30,9 +30,8 @@ class Config:
 class DevelopmentConfig(Config):
     """Development configuration."""
     DEBUG = True
-    # Use remote PostgreSQL if DATABASE_URL is set, otherwise fallback to SQLite for local dev
-    # Note: Render Free tier PostgreSQL only allows internal connections
-    SQLALCHEMY_DATABASE_URI = get_database_uri() or 'sqlite:///dev.db'
+    # Use Neon PostgreSQL for both local and remote
+    SQLALCHEMY_DATABASE_URI = get_database_uri() or 'postgresql://neondb_owner:npg_ecS9tXY0CNBF@ep-raspy-grass-a1rz3c2w-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require'
 
 
 class ProductionConfig(Config):
