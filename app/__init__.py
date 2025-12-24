@@ -39,9 +39,16 @@ def create_app(config_name=None):
     # Register view routes
     register_views(app)
 
-    # Create database tables
+    # Create database tables and run migrations
     with app.app_context():
         db.create_all()
+        # Add participants column if missing
+        from sqlalchemy import text
+        try:
+            db.session.execute(text('ALTER TABLE expense ADD COLUMN IF NOT EXISTS participants TEXT'))
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
 
     return app
 
