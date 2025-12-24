@@ -1,7 +1,8 @@
 Flask==2.3.3
-SQLAlchemy==2.0.21
+SQLAlchemy>=2.0.35
 Flask-SQLAlchemy==3.0.5
 
-psycopg2-binary==2.9.7
+psycopg2-binary>=2.9.9
+pg8000>=1.30.0
 gunicorn==21.2.0
-typing-extensions==4.8.0
+typing-extensions>=4.12.0

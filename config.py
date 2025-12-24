@@ -30,8 +30,9 @@ class Config:
 class DevelopmentConfig(Config):
     """Development configuration."""
     DEBUG = True
-    # Always use remote PostgreSQL (external hostname - without '-a' for outside Render network)
-    SQLALCHEMY_DATABASE_URI = get_database_uri() or 'postgresql://statistic_ma7l_user:LEtrCDGbwKrAPg67xqlnWfwDUQsxM70g@dpg-d16oakndiees73dd8j6g.oregon-postgres.render.com/statistic_ma7l?sslmode=require'
+    # Use remote PostgreSQL if DATABASE_URL is set, otherwise fallback to SQLite for local dev
+    # Note: Render Free tier PostgreSQL only allows internal connections
+    SQLALCHEMY_DATABASE_URI = get_database_uri() or 'sqlite:///dev.db'
 
 
 class ProductionConfig(Config):
