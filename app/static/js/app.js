@@ -5,6 +5,7 @@ class ExpenseManager {
         this.isLocked = false;
         this.currentAction = null;
         this.memberSuggestions = new Set(); // Lưu danh sách tên thành viên
+        this.allMembers = new Set(); // Tất cả thành viên (bao gồm cả participants)
         this.init();
     }
 
@@ -57,7 +58,8 @@ class ExpenseManager {
             const passwordModal = document.getElementById('passwordModal');
             const archiveModal = document.getElementById('archiveModal');
             const archiveListModal = document.getElementById('archiveListModal');
-            
+            const actionPasswordModal = document.getElementById('actionPasswordModal');
+
             if (event.target === historyModal) {
                 historyModal.style.display = 'none';
             }
@@ -73,6 +75,9 @@ class ExpenseManager {
             if (event.target === archiveListModal) {
                 archiveListModal.style.display = 'none';
             }
+            if (event.target === actionPasswordModal) {
+                this.closeActionPasswordModal();
+            }
         };
     }
 
@@ -83,12 +88,36 @@ class ExpenseManager {
             // Cập nhật danh sách gợi ý tên thành viên
             this.expenses.forEach(expense => {
                 this.memberSuggestions.add(expense.name);
+                this.allMembers.add(expense.name);
+                // Thêm cả participants vào danh sách
+                if (expense.participants && Array.isArray(expense.participants)) {
+                    expense.participants.forEach(p => this.allMembers.add(p));
+                }
             });
             this.renderExpenses();
             this.setupAutocomplete();
+            this.updateParticipantsList();
         } catch (error) {
             console.error('Error loading expenses:', error);
         }
+    }
+
+    updateParticipantsList() {
+        const container = document.getElementById('participantsList');
+        if (!container) return;
+
+        container.innerHTML = '';
+        const sortedMembers = Array.from(this.allMembers).sort();
+
+        sortedMembers.forEach(member => {
+            const label = document.createElement('label');
+            label.className = 'participant-checkbox';
+            label.innerHTML = `
+                <input type="checkbox" name="participant" value="${member}">
+                <span>${member}</span>
+            `;
+            container.appendChild(label);
+        });
     }
 
     async loadStats() {
@@ -127,18 +156,16 @@ class ExpenseManager {
             return;
         }
 
-        // Tính trung bình cho việc cân bằng
-        const totalAmount = peopleStats.reduce((sum, person) => sum + person.total, 0);
-        const averagePerPerson = totalAmount / peopleStats.length;
-
         peopleStats.forEach(person => {
             const card = document.createElement('div');
             card.className = 'person-card';
             card.onclick = () => this.showPersonDetail(person.name);
-            
-            // Tính số tiền cần nộp/nhận (trung bình - đã chi)
-            const balance = person.total - averagePerPerson;
-            
+
+            // Balance = total paid - share owed
+            // Positive = paid more than share (should receive money)
+            // Negative = paid less than share (should pay money)
+            const balance = person.total - (person.share || 0);
+
             card.innerHTML = `
                 <div class="person-card-content">
                     <span class="person-name">${person.name}</span>
@@ -152,7 +179,7 @@ class ExpenseManager {
                     </span>
                 </div>
             `;
-            
+
             grid.appendChild(card);
         });
     }
@@ -193,21 +220,34 @@ class ExpenseManager {
             this.showNotification('Chức năng đã bị khóa', 'error');
             return;
         }
-        
+
         const formData = new FormData(document.getElementById('expenseForm'));
-        
+
         // Chuẩn hóa tên: trim space và capitalize từng từ
         let rawName = formData.get('name').trim();
         const normalizedName = this.normalizeName(rawName);
-        
+
         // Chuyển đổi số tiền: nhập 1 = 1000 VNĐ
         let rawAmount = parseFloat(formData.get('amount'));
         const actualAmount = rawAmount * 1000;
-        
+
+        // Get selected participants
+        let participants = null;
+        const selectParticipantsCheckbox = document.getElementById('selectParticipants');
+        if (selectParticipantsCheckbox && selectParticipantsCheckbox.checked) {
+            const checkboxes = document.querySelectorAll('#participantsList input[name="participant"]:checked');
+            participants = Array.from(checkboxes).map(cb => cb.value);
+            if (participants.length === 0) {
+                this.showNotification('Vui lòng chọn ít nhất một người tham gia', 'error');
+                return;
+            }
+        }
+
         const data = {
             name: normalizedName,
             amount: actualAmount,
-            purpose: formData.get('purpose').trim()
+            purpose: formData.get('purpose').trim(),
+            participants: participants
         };
 
         if (!data.name || !data.amount || !data.purpose) {
@@ -215,10 +255,22 @@ class ExpenseManager {
             return;
         }
 
+        // If editing, require password
+        if (this.editingId) {
+            this.showPasswordPrompt('edit', async (password) => {
+                data.password = password;
+                await this.submitExpense(data);
+            });
+        } else {
+            await this.submitExpense(data);
+        }
+    }
+
+    async submitExpense(data) {
         try {
             const url = this.editingId ? `/api/expenses/${this.editingId}` : '/api/expenses';
             const method = this.editingId ? 'PUT' : 'POST';
-            
+
             const response = await fetch(url, {
                 method: method,
                 headers: {
@@ -229,16 +281,17 @@ class ExpenseManager {
 
             if (response.ok) {
                 // Thêm tên mới vào danh sách gợi ý
-                this.memberSuggestions.add(normalizedName);
-                
+                this.memberSuggestions.add(data.name);
+                this.allMembers.add(data.name);
+
+                const message = this.editingId ? 'Cập nhật thành công!' : 'Thêm chi tiêu thành công!';
                 this.resetForm();
                 this.loadExpenses();
                 this.loadStats();
-                
-                const message = this.editingId ? 'Cập nhật thành công!' : 'Thêm chi tiêu thành công!';
                 this.showNotification(message, 'success');
             } else {
-                this.showNotification('Có lỗi xảy ra', 'error');
+                const result = await response.json();
+                this.showNotification(result.error || 'Có lỗi xảy ra', 'error');
             }
         } catch (error) {
             console.error('Error:', error);
@@ -251,19 +304,66 @@ class ExpenseManager {
             this.showNotification('Chức năng đã bị khóa', 'error');
             return;
         }
-        
+
         const expense = this.expenses.find(e => e.id === id);
         if (expense) {
             document.getElementById('name').value = expense.name;
             // Hiển thị số tiền đã chia cho 1000 (số đơn giản)
             document.getElementById('amount').value = expense.amount / 1000;
             document.getElementById('purpose').value = expense.purpose;
-            
+
+            // Handle participants
+            const selectParticipantsCheckbox = document.getElementById('selectParticipants');
+            const participantsContainer = document.getElementById('participantsContainer');
+
+            if (expense.participants && expense.participants.length > 0) {
+                selectParticipantsCheckbox.checked = true;
+                participantsContainer.style.display = 'block';
+
+                // Check the correct participants
+                const checkboxes = document.querySelectorAll('#participantsList input[name="participant"]');
+                checkboxes.forEach(cb => {
+                    cb.checked = expense.participants.includes(cb.value);
+                });
+            } else {
+                selectParticipantsCheckbox.checked = false;
+                participantsContainer.style.display = 'none';
+            }
+
             this.editingId = id;
             document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save"></i> Cập nhật';
-            
+
             document.querySelector('.form-section h2').scrollIntoView({ behavior: 'smooth' });
         }
+    }
+
+    // Show password modal for edit/delete operations
+    showPasswordPrompt(action, callback) {
+        this.pendingAction = { action, callback };
+        document.getElementById('passwordModalTitle').textContent =
+            action === 'edit' ? 'Xác nhận sửa chi tiêu' : 'Xác nhận xóa chi tiêu';
+        document.getElementById('actionPassword').value = '';
+        document.getElementById('actionPasswordModal').style.display = 'block';
+    }
+
+    confirmActionPassword() {
+        const password = document.getElementById('actionPassword').value;
+        if (!password) {
+            this.showNotification('Vui lòng nhập mật khẩu', 'error');
+            return;
+        }
+
+        if (this.pendingAction && this.pendingAction.callback) {
+            this.pendingAction.callback(password);
+        }
+
+        this.closeActionPasswordModal();
+    }
+
+    closeActionPasswordModal() {
+        document.getElementById('actionPasswordModal').style.display = 'none';
+        document.getElementById('actionPassword').value = '';
+        this.pendingAction = null;
     }
 
     async deleteExpense(id) {
@@ -271,27 +371,35 @@ class ExpenseManager {
             this.showNotification('Chức năng đã bị khóa', 'error');
             return;
         }
-        
+
         if (!confirm('Bạn có chắc chắn muốn xóa chi tiêu này?')) {
             return;
         }
 
-        try {
-            const response = await fetch(`/api/expenses/${id}`, {
-                method: 'DELETE'
-            });
+        // Show password prompt
+        this.showPasswordPrompt('delete', async (password) => {
+            try {
+                const response = await fetch(`/api/expenses/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ password })
+                });
 
-            if (response.ok) {
-                this.loadExpenses();
-                this.loadStats();
-                this.showNotification('Xóa thành công!', 'success');
-            } else {
-                this.showNotification('Có lỗi xảy ra khi xóa', 'error');
+                if (response.ok) {
+                    this.loadExpenses();
+                    this.loadStats();
+                    this.showNotification('Xóa thành công!', 'success');
+                } else {
+                    const result = await response.json();
+                    this.showNotification(result.error || 'Có lỗi xảy ra khi xóa', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                this.showNotification('Có lỗi xảy ra', 'error');
             }
-        } catch (error) {
-            console.error('Error:', error);
-            this.showNotification('Có lỗi xảy ra', 'error');
-        }
+        });
     }
 
     resetForm() {
@@ -299,6 +407,19 @@ class ExpenseManager {
         this.editingId = null;
         document.getElementById('submitBtn').innerHTML = '<i class="fas fa-plus"></i> Thêm chi tiêu';
         this.hideSuggestions();
+
+        // Reset participants selection
+        const selectParticipantsCheckbox = document.getElementById('selectParticipants');
+        if (selectParticipantsCheckbox) {
+            selectParticipantsCheckbox.checked = false;
+        }
+        const participantsContainer = document.getElementById('participantsContainer');
+        if (participantsContainer) {
+            participantsContainer.style.display = 'none';
+        }
+        // Uncheck all participant checkboxes
+        const checkboxes = document.querySelectorAll('#participantsList input[name="participant"]');
+        checkboxes.forEach(cb => cb.checked = false);
     }
 
     formatCurrency(amount) {
@@ -753,8 +874,60 @@ class ExpenseManager {
             const response = await fetch('/api/history');
             const history = await response.json();
             this.renderHistory(history);
+            this.updateHistoryMonthSelect(history);
         } catch (error) {
             console.error('Error loading history:', error);
+        }
+    }
+
+    updateHistoryMonthSelect(history) {
+        const select = document.getElementById('historyMonthSelect');
+        if (!select) return;
+
+        // Get unique months from history
+        const months = new Set();
+        history.forEach(item => {
+            const date = new Date(item.timestamp);
+            const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            months.add(monthKey);
+        });
+
+        // Clear existing options except first two
+        while (select.options.length > 2) {
+            select.remove(2);
+        }
+
+        // Add month options sorted descending
+        Array.from(months).sort().reverse().forEach(month => {
+            const [year, mon] = month.split('-');
+            const option = document.createElement('option');
+            option.value = month;
+            option.textContent = `Tháng ${mon}/${year}`;
+            select.appendChild(option);
+        });
+    }
+
+    async clearHistory(month, password) {
+        try {
+            const response = await fetch('/api/history/clear', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ month, password })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                this.showNotification(`Đã xóa ${result.deleted_count} mục lịch sử`, 'success');
+                this.loadHistory();
+            } else {
+                this.showNotification(result.error || 'Có lỗi xảy ra', 'error');
+            }
+        } catch (error) {
+            console.error('Error clearing history:', error);
+            this.showNotification('Có lỗi xảy ra', 'error');
         }
     }
 
@@ -898,13 +1071,77 @@ function closeArchiveDetailModal() {
     }
 }
 
+function clearHistoryByMonth() {
+    const select = document.getElementById('historyMonthSelect');
+    const month = select.value;
+
+    if (!month) {
+        expenseManager.showNotification('Vui lòng chọn tháng cần xóa', 'error');
+        return;
+    }
+
+    const confirmMsg = month === 'all'
+        ? 'Bạn có chắc chắn muốn xóa TẤT CẢ lịch sử?'
+        : `Bạn có chắc chắn muốn xóa lịch sử tháng ${month}?`;
+
+    if (!confirm(confirmMsg)) {
+        return;
+    }
+
+    // Show password prompt
+    expenseManager.showPasswordPrompt('delete', async (password) => {
+        await expenseManager.clearHistory(month, password);
+    });
+}
+
+async function handleLogout() {
+    if (!confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        if (response.ok) {
+            window.location.href = '/login';
+        }
+    } catch (error) {
+        console.error('Logout error:', error);
+        expenseManager.showNotification('Có lỗi xảy ra khi đăng xuất', 'error');
+    }
+}
+
+// Participants helper functions
+function toggleParticipantsSelect() {
+    const checkbox = document.getElementById('selectParticipants');
+    const container = document.getElementById('participantsContainer');
+    if (checkbox && container) {
+        container.style.display = checkbox.checked ? 'block' : 'none';
+    }
+}
+
+function selectAllParticipants() {
+    const checkboxes = document.querySelectorAll('#participantsList input[name="participant"]');
+    checkboxes.forEach(cb => cb.checked = true);
+}
+
+function deselectAllParticipants() {
+    const checkboxes = document.querySelectorAll('#participantsList input[name="participant"]');
+    checkboxes.forEach(cb => cb.checked = false);
+}
+
 const style = document.createElement('style');
 style.textContent = `
     @keyframes slideIn {
         from { transform: translateX(100%); opacity: 0; }
         to { transform: translateX(0); opacity: 1; }
     }
-    
+
     @keyframes slideOut {
         from { transform: translateX(0); opacity: 1; }
         to { transform: translateX(100%); opacity: 0; }

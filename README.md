@@ -1,113 +1,145 @@
 # Web Thống Kê Chi Tiêu Phòng Trọ
 
-Một ứng dụng web đẹp để quản lý và thống kê chi tiêu của các thành viên trong phòng trọ.
+Ứng dụng web quản lý và thống kê chi tiêu của các thành viên trong phòng trọ.
 
 ## Tính năng
 
-- ✨ Giao diện đẹp, hiện đại với gradient background
-- 📊 Thống kê tổng quan (tổng chi tiêu, số giao dịch, trung bình)
-- ➕ Thêm chi tiêu mới với tên, số tiền, và mục đích
-- ✏️ Chỉnh sửa thông tin chi tiêu
-- 🗑️ Xóa chi tiêu
-- 📝 Lưu và hiển thị lịch sử chỉnh sửa đầy đủ
-- 📱 Responsive design - tương thích mobile
-- 🔔 Thông báo toast khi thực hiện các thao tác
+- **Quản lý chi tiêu**: Thêm, sửa, xóa chi tiêu
+- **Phân chia chi tiêu**: Chọn người tham gia cho mỗi khoản chi (mặc định tất cả)
+- **Thống kê theo người**: Xem tổng chi, số tiền cần nộp/nhận
+- **Lịch sử thay đổi**: Theo dõi mọi thao tác (thêm, sửa, xóa)
+- **Xóa lịch sử**: Xóa theo tháng hoặc tất cả
+- **Lưu trữ (Archive)**: Bắt đầu kỳ thống kê mới
+- **Bảo mật**: Yêu cầu mật khẩu cho sửa/xóa
+- **Đăng nhập**: Bảo vệ ứng dụng bằng mật khẩu
 
-## Cài đặt và chạy
+## Thông tin đăng nhập
 
-### 1. Cài đặt dependencies
+| Mật khẩu mặc định | Cách thay đổi |
+|-------------------|---------------|
+| `admin123` | Đặt biến môi trường `ADMIN_PASSWORD` |
+
+## Cài đặt
 
 ```bash
+# Clone repo
+git clone <repo-url>
+cd Statistic
+
+# Cài đặt dependencies
 pip install -r requirements.txt
+
+# Chạy migration (nếu cần)
+python migrate.py
+
+# Chạy ứng dụng
+python run.py
 ```
 
-### 2. Chạy ứng dụng
+Truy cập: **http://localhost:5001**
 
-```bash
-python app.py
-```
-
-### 3. Truy cập
-
-Mở trình duyệt và truy cập: `http://localhost:5000`
-
-## Deploy lên server
-
-### Deploy với Gunicorn (Production)
-
-```bash
-# Cài đặt Gunicorn
-pip install gunicorn
-
-# Chạy với Gunicorn
-gunicorn -w 4 -b 0.0.0.0:5000 app:app
-```
-
-### Deploy với Docker
-
-```bash
-# Build Docker image
-docker build -t expense-tracker .
-
-# Chạy container
-docker run -p 5000:5000 expense-tracker
-```
-
-### Deploy lên Heroku
-
-1. Tạo file `Procfile`:
+## Cấu trúc Project (Clean Architecture)
 
 ```
-web: gunicorn app:app
-```
-
-2. Deploy:
-
-```bash
-heroku create your-app-name
-git push heroku main
-```
-
-## Cấu trúc project
-
-```
-.
-├── app.py              # Flask backend
-├── requirements.txt    # Dependencies
-├── templates/
-│   └── index.html     # Frontend template
-├── static/
-│   ├── css/
-│   │   └── style.css  # Styles
-│   └── js/
-│       └── app.js     # JavaScript logic
-├── expenses.json      # Dữ liệu chi tiêu (auto-generated)
-├── history.json       # Lịch sử chỉnh sửa (auto-generated)
-└── README.md
+Statistic/
+├── run.py                  # Entry point
+├── config.py               # Cấu hình (Dev/Prod/Test)
+├── migrate.py              # Database migrations
+├── requirements.txt
+│
+└── app/
+    ├── __init__.py         # App Factory
+    ├── extensions.py       # Flask extensions
+    │
+    ├── models/             # Database Models
+    │   ├── expense.py      # Chi tiêu
+    │   ├── history.py      # Lịch sử
+    │   └── archive.py      # Lưu trữ
+    │
+    ├── api/                # API Routes (Blueprints)
+    │   ├── auth.py         # Đăng nhập/xuất
+    │   ├── expenses.py     # CRUD chi tiêu
+    │   ├── stats.py        # Thống kê
+    │   ├── history.py      # Lịch sử
+    │   └── archive.py      # Lưu trữ
+    │
+    ├── services/           # Business Logic
+    │   ├── expense_service.py
+    │   ├── stats_service.py
+    │   ├── history_service.py
+    │   └── archive_service.py
+    │
+    ├── utils/              # Helpers
+    │   ├── decorators.py   # @login_required, @password_required
+    │   └── responses.py    # API responses
+    │
+    ├── templates/          # HTML
+    └── static/             # CSS, JS
 ```
 
 ## API Endpoints
 
-- `GET /` - Trang chủ
-- `GET /api/expenses` - Lấy danh sách chi tiêu
-- `POST /api/expenses` - Thêm chi tiêu mới
-- `PUT /api/expenses/<id>` - Cập nhật chi tiêu
-- `DELETE /api/expenses/<id>` - Xóa chi tiêu
-- `GET /api/history` - Lấy lịch sử chỉnh sửa
-- `GET /api/stats` - Lấy thống kê
+### Authentication
+| Method | Endpoint | Mô tả |
+|--------|----------|-------|
+| POST | `/api/login` | Đăng nhập |
+| POST | `/api/logout` | Đăng xuất |
+| GET | `/api/check-auth` | Kiểm tra đăng nhập |
 
-## Công nghệ sử dụng
+### Expenses
+| Method | Endpoint | Mô tả | Password |
+|--------|----------|-------|----------|
+| GET | `/api/expenses` | Lấy danh sách | - |
+| POST | `/api/expenses` | Thêm mới | - |
+| PUT | `/api/expenses/<id>` | Cập nhật | ✅ |
+| DELETE | `/api/expenses/<id>` | Xóa | ✅ |
 
-- **Backend**: Python Flask
-- **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
-- **Icons**: Font Awesome 6
-- **Fonts**: Google Fonts (Inter)
-- **Storage**: JSON files (có thể chuyển sang database dễ dàng)
+### Statistics
+| Method | Endpoint | Mô tả |
+|--------|----------|-------|
+| GET | `/api/stats` | Thống kê tổng quan |
+| GET | `/api/stats/people` | Thống kê theo người |
+| GET | `/api/stats/people/<name>` | Chi tiết 1 người |
 
-## Tùy chỉnh
+### History & Archive
+| Method | Endpoint | Mô tả | Password |
+|--------|----------|-------|----------|
+| GET | `/api/history` | Lấy lịch sử | - |
+| POST | `/api/history/clear` | Xóa lịch sử | ✅ |
+| GET | `/api/archive/stats` | Danh sách lưu trữ | - |
+| POST | `/api/archive` | Tạo lưu trữ mới | ✅ |
 
-Để thay đổi màu sắc, chỉnh sửa file `static/css/style.css`. Gradient chính được định nghĩa ở:
+## Cấu hình Database
 
-```css
-background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+| Môi trường | Database | Cấu hình |
+|------------|----------|----------|
+| Development | SQLite | Tự động (dev.db) |
+| Production | PostgreSQL | Đặt `DATABASE_URL` |
+
+```bash
+# Ví dụ Production
+export DATABASE_URL="postgresql://user:pass@host:5432/dbname"
+export ADMIN_PASSWORD="your-secure-password"
+python run.py
 ```
+
+## Deploy
+
+### Heroku / Render
+```bash
+# Procfile đã sẵn sàng
+web: gunicorn run:app
+```
+
+### Docker
+```bash
+docker build -t expense-tracker .
+docker run -p 5001:5001 -e ADMIN_PASSWORD=secret expense-tracker
+```
+
+## Công nghệ
+
+- **Backend**: Flask, SQLAlchemy
+- **Database**: SQLite (dev) / PostgreSQL (prod)
+- **Frontend**: HTML5, CSS3, Vanilla JS
+- **Icons**: Font Awesome 6

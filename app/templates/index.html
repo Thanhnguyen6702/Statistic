@@ -27,6 +27,9 @@
             <button class="btn btn-secondary" onclick="showArchiveList()">
                 <i class="fas fa-history"></i> Xem kho lưu trữ
             </button>
+            <button class="btn btn-logout" onclick="handleLogout()">
+                <i class="fas fa-sign-out-alt"></i> Đăng xuất
+            </button>
         </div>
 
         <div class="stats-cards">
@@ -74,6 +77,22 @@
                 <div class="form-group">
                     <label for="purpose">Mục đích chi tiêu</label>
                     <input type="text" id="purpose" name="purpose" required>
+                </div>
+                <div class="form-group participants-group">
+                    <label>
+                        <input type="checkbox" id="selectParticipants" onchange="toggleParticipantsSelect()">
+                        Chỉ tính cho một số người (mặc định: tất cả)
+                    </label>
+                    <div id="participantsContainer" class="participants-container" style="display: none;">
+                        <div class="participants-header">
+                            <span>Chọn người tham gia:</span>
+                            <button type="button" class="btn btn-small" onclick="selectAllParticipants()">Chọn tất cả</button>
+                            <button type="button" class="btn btn-small" onclick="deselectAllParticipants()">Bỏ chọn tất cả</button>
+                        </div>
+                        <div id="participantsList" class="participants-list">
+                            <!-- Dynamically populated -->
+                        </div>
+                    </div>
                 </div>
                 <button type="submit" id="submitBtn" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Thêm chi tiêu
@@ -135,6 +154,18 @@
                     <span class="close" onclick="toggleHistory()">&times;</span>
                 </div>
                 <div class="modal-body">
+                    <div class="history-actions">
+                        <div class="history-filter">
+                            <label>Xóa lịch sử:</label>
+                            <select id="historyMonthSelect">
+                                <option value="">-- Chọn tháng --</option>
+                                <option value="all">Tất cả lịch sử</option>
+                            </select>
+                            <button class="btn btn-danger btn-small" onclick="clearHistoryByMonth()">
+                                <i class="fas fa-trash"></i> Xóa
+                            </button>
+                        </div>
+                    </div>
                     <div id="historyList"></div>
                 </div>
             </div>
@@ -217,6 +248,31 @@
                 </div>
                 <div class="modal-body">
                     <div id="archiveList"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="actionPasswordModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-key"></i> <span id="passwordModalTitle">Xác nhận thao tác</span></h3>
+                    <span class="close" onclick="expenseManager.closeActionPasswordModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="password-form">
+                        <div class="form-group">
+                            <label for="actionPassword">Nhập mật khẩu để xác nhận:</label>
+                            <input type="password" id="actionPassword" class="form-input" placeholder="Mật khẩu...">
+                        </div>
+                        <div class="modal-actions">
+                            <button class="btn btn-primary" onclick="expenseManager.confirmActionPassword()">
+                                <i class="fas fa-check"></i> Xác nhận
+                            </button>
+                            <button class="btn btn-secondary" onclick="expenseManager.closeActionPasswordModal()">
+                                <i class="fas fa-times"></i> Hủy
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
