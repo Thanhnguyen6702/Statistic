@@ -65,3 +65,7 @@ def register_views(app):
         if session.get('logged_in'):
             return redirect(url_for('index'))
         return render_template('login.html')
+
+
+# Create app instance for gunicorn (gunicorn app:app)
+app = create_app()
