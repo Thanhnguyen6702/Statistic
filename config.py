@@ -24,7 +24,6 @@ class Config:
     """Base configuration."""
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD') or 'admin123'
 
 
 class DevelopmentConfig(Config):

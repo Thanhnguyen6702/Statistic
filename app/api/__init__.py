@@ -3,12 +3,13 @@ API package - All API blueprints.
 """
 
 from app.api import auth, expenses, history, archive, stats, admin
+from app.api import game_room, game_stats
 
 
 def register_blueprints(app):
     """Register all API blueprints with the app."""
 
-    # Auth routes: /api/login, /api/logout, /api/check-auth
+    # Auth routes: /api/login, /api/logout, /api/register, /api/me, /api/check-auth
     app.register_blueprint(auth.bp, url_prefix='/api')
 
     # Expense routes: /api/expenses/*
@@ -25,3 +26,7 @@ def register_blueprints(app):
 
     # Admin routes: /api/lock
     app.register_blueprint(admin.bp, url_prefix='/api')
+
+    # Game routes
+    app.register_blueprint(game_room.bp, url_prefix='/api/game/room')
+    app.register_blueprint(game_stats.bp, url_prefix='/api/game/stats')

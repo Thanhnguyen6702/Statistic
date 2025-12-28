@@ -6,7 +6,7 @@ import os
 from flask import Flask, render_template, session, redirect, url_for
 
 from config import config
-from app.extensions import db
+from app.extensions import db, socketio
 from app.api import register_blueprints
 
 
@@ -32,6 +32,10 @@ def create_app(config_name=None):
 
     # Initialize extensions
     db.init_app(app)
+    socketio.init_app(app)
+
+    # Import socket events (registers handlers via decorators)
+    from app.sockets import game_events
 
     # Register blueprints
     register_blueprints(app)
@@ -58,20 +62,29 @@ def register_views(app):
 
     @app.route('/')
     def index():
-        """Main page."""
-        if not session.get('logged_in'):
+        """Dashboard - main page after login."""
+        if not session.get('user_id'):
             return redirect(url_for('login_page'))
-
-        from app.models import Expense
-        expenses = Expense.query.all()
-        return render_template('index.html', expenses=[exp.to_dict() for exp in expenses])
+        return render_template('dashboard.html')
 
     @app.route('/login')
     def login_page():
-        """Login page."""
-        if session.get('logged_in'):
+        """Login/Register page."""
+        if session.get('user_id'):
             return redirect(url_for('index'))
         return render_template('login.html')
+
+    # Game room page (for playing RPS)
+    @app.route('/game/room/<room_code>')
+    def game_room_page(room_code):
+        """Game room page for playing."""
+        if not session.get('user_id'):
+            return redirect(url_for('login_page'))
+        from app.services import GameRoomService
+        room = GameRoomService.get_room_by_code(room_code)
+        if not room:
+            return redirect(url_for('index'))
+        return render_template('game_room.html', room=room.to_dict())
 
 
 # Create app instance for gunicorn (gunicorn app:app)

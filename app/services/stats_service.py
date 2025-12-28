@@ -14,16 +14,16 @@ class StatsService:
         expenses = Expense.query.all()
 
         if not expenses:
-            return {'total': 0, 'count': 0, 'average': 0}
+            return {'total_amount': 0, 'total_count': 0, 'average_amount': 0}
 
         total = sum(exp.amount for exp in expenses)
         count = len(expenses)
         average = total / count if count > 0 else 0
 
         return {
-            'total': total,
-            'count': count,
-            'average': round(average, 2)
+            'total_amount': total,
+            'total_count': count,
+            'average_amount': round(average, 2)
         }
 
     @staticmethod

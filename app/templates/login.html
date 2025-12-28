@@ -3,15 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng Nhập - Thống Kê Chi Tiêu</title>
+    <title>Đăng Nhập - Phòng Trọ Manager</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Inter', sans-serif;
@@ -26,44 +22,76 @@
         .login-container {
             background: white;
             padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border-radius: 24px;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.3);
             width: 100%;
-            max-width: 400px;
-            text-align: center;
+            max-width: 420px;
         }
 
-        .login-icon {
+        .logo {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .logo-icon {
             width: 80px;
             height: 80px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 50%;
+            border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 24px;
-        }
-
-        .login-icon i {
+            margin: 0 auto 16px;
             font-size: 36px;
             color: white;
         }
 
-        h1 {
+        .logo h1 {
             color: #2d3748;
-            font-size: 1.75rem;
-            margin-bottom: 8px;
+            font-size: 1.5rem;
+            font-weight: 700;
         }
 
-        .subtitle {
+        .logo p {
             color: #718096;
+            font-size: 0.9rem;
+            margin-top: 4px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 28px;
+            background: #f7fafc;
+            padding: 6px;
+            border-radius: 12px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            font-weight: 600;
+            color: #718096;
+            cursor: pointer;
+            transition: all 0.3s;
             font-size: 0.95rem;
-            margin-bottom: 32px;
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .tab:hover:not(.active) {
+            color: #4a5568;
         }
 
         .form-group {
-            margin-bottom: 24px;
-            text-align: left;
+            margin-bottom: 20px;
         }
 
         .form-group label {
@@ -74,13 +102,21 @@
             font-size: 0.9rem;
         }
 
-        .password-input-wrapper {
+        .input-wrapper {
             position: relative;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
         }
 
         .form-group input {
             width: 100%;
-            padding: 14px 48px 14px 16px;
+            padding: 14px 16px 14px 44px;
             border: 2px solid #e2e8f0;
             border-radius: 12px;
             font-size: 1rem;
@@ -93,25 +129,13 @@
             box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
         }
 
-        .toggle-password {
-            position: absolute;
-            right: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            color: #718096;
-            cursor: pointer;
-            font-size: 1.1rem;
+        .form-group input::placeholder {
+            color: #a0aec0;
         }
 
-        .toggle-password:hover {
-            color: #667eea;
-        }
-
-        .btn-login {
+        .btn-submit {
             width: 100%;
-            padding: 14px;
+            padding: 16px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: none;
             border-radius: 12px;
@@ -126,39 +150,83 @@
             gap: 8px;
         }
 
-        .btn-login:hover {
+        .btn-submit:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
         }
 
-        .btn-login:active {
-            transform: translateY(0);
-        }
-
-        .btn-login:disabled {
+        .btn-submit:disabled {
             opacity: 0.7;
             cursor: not-allowed;
             transform: none;
         }
 
-        .error-message {
-            background: #fed7d7;
-            color: #c53030;
-            padding: 12px;
-            border-radius: 8px;
+        .message {
+            padding: 12px 16px;
+            border-radius: 10px;
             margin-bottom: 20px;
             font-size: 0.9rem;
             display: none;
         }
 
-        .error-message.show {
-            display: block;
+        .message.error {
+            background: #fed7d7;
+            color: #c53030;
         }
 
-        .footer {
-            margin-top: 24px;
-            color: #a0aec0;
+        .message.success {
+            background: #c6f6d5;
+            color: #276749;
+        }
+
+        .message.show {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .features {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .features-title {
+            text-align: center;
+            color: #718096;
             font-size: 0.85rem;
+            margin-bottom: 16px;
+        }
+
+        .features-list {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+        }
+
+        .feature {
+            text-align: center;
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: #f7fafc;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 8px;
+            font-size: 20px;
+        }
+
+        .feature span {
+            font-size: 0.8rem;
+            color: #718096;
         }
 
         @keyframes shake {
@@ -167,98 +235,203 @@
             75% { transform: translateX(10px); }
         }
 
-        .shake {
-            animation: shake 0.4s ease-in-out;
-        }
+        .shake { animation: shake 0.4s ease-in-out; }
     </style>
 </head>
 <body>
     <div class="login-container">
-        <div class="login-icon">
-            <i class="fas fa-chart-line"></i>
+        <div class="logo">
+            <div class="logo-icon">
+                <i class="fas fa-home"></i>
+            </div>
+            <h1>Phòng Trọ Manager</h1>
+            <p>Quản lý chi tiêu & Giải trí</p>
         </div>
-        <h1>Thống Kê Chi Tiêu</h1>
-        <p class="subtitle">Phòng Trọ - Đăng nhập để tiếp tục</p>
 
-        <div id="errorMessage" class="error-message"></div>
+        <div class="tabs">
+            <button class="tab active" id="tabLogin" onclick="switchTab('login')">
+                <i class="fas fa-sign-in-alt"></i> Đăng Nhập
+            </button>
+            <button class="tab" id="tabRegister" onclick="switchTab('register')">
+                <i class="fas fa-user-plus"></i> Đăng Ký
+            </button>
+        </div>
 
+        <div id="message" class="message"></div>
+
+        <!-- Login Form -->
         <form id="loginForm" onsubmit="handleLogin(event)">
             <div class="form-group">
-                <label for="password">Mật khẩu</label>
-                <div class="password-input-wrapper">
-                    <input type="password" id="password" placeholder="Nhập mật khẩu..." required>
-                    <button type="button" class="toggle-password" onclick="togglePasswordVisibility()">
-                        <i class="fas fa-eye" id="toggleIcon"></i>
-                    </button>
+                <label>Tên đăng nhập</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="loginUsername" placeholder="Nhập tên đăng nhập" required minlength="3">
                 </div>
             </div>
-            <button type="submit" class="btn-login" id="loginBtn">
-                <i class="fas fa-sign-in-alt"></i>
-                Đăng Nhập
+            <div class="form-group">
+                <label>Mật khẩu</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="loginPassword" placeholder="Nhập mật khẩu" required minlength="4">
+                </div>
+            </div>
+            <button type="submit" class="btn-submit" id="loginBtn">
+                <i class="fas fa-arrow-right"></i> Đăng Nhập
             </button>
         </form>
 
-        <p class="footer">
-            <i class="fas fa-lock"></i> Kết nối được bảo mật
-        </p>
+        <!-- Register Form -->
+        <form id="registerForm" class="hidden" onsubmit="handleRegister(event)">
+            <div class="form-group">
+                <label>Tên đăng nhập</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="regUsername" placeholder="Chọn tên (3-20 ký tự)" required minlength="3" maxlength="20">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Mật khẩu</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="regPassword" placeholder="Chọn mật khẩu (4+ ký tự)" required minlength="4">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Avatar URL (tuỳ chọn)</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-image"></i>
+                    <input type="url" id="regAvatar" placeholder="https://example.com/avatar.png">
+                </div>
+            </div>
+            <button type="submit" class="btn-submit" id="registerBtn">
+                <i class="fas fa-user-plus"></i> Tạo Tài Khoản
+            </button>
+        </form>
+
+        <div class="features">
+            <div class="features-title">Tính năng chính</div>
+            <div class="features-list">
+                <div class="feature">
+                    <div class="feature-icon"><i class="fas fa-chart-pie"></i></div>
+                    <span>Thống Kê</span>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon"><i class="fas fa-gamepad"></i></div>
+                    <span>Trò Chơi</span>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon"><i class="fas fa-users"></i></div>
+                    <span>Nhóm</span>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
-        function togglePasswordVisibility() {
-            const passwordInput = document.getElementById('password');
-            const toggleIcon = document.getElementById('toggleIcon');
+        function switchTab(tab) {
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const tabLogin = document.getElementById('tabLogin');
+            const tabRegister = document.getElementById('tabRegister');
+            const message = document.getElementById('message');
 
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                toggleIcon.className = 'fas fa-eye-slash';
+            message.classList.remove('show');
+
+            if (tab === 'login') {
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+                tabLogin.classList.add('active');
+                tabRegister.classList.remove('active');
+                document.getElementById('loginUsername').focus();
             } else {
-                passwordInput.type = 'password';
-                toggleIcon.className = 'fas fa-eye';
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+                tabLogin.classList.remove('active');
+                tabRegister.classList.add('active');
+                document.getElementById('regUsername').focus();
+            }
+        }
+
+        function showMessage(text, type) {
+            const message = document.getElementById('message');
+            message.innerHTML = `<i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'check-circle'}"></i> ${text}`;
+            message.className = `message ${type} show`;
+
+            if (type === 'error') {
+                document.querySelector('.login-container').classList.add('shake');
+                setTimeout(() => document.querySelector('.login-container').classList.remove('shake'), 400);
             }
         }
 
         async function handleLogin(e) {
             e.preventDefault();
 
-            const password = document.getElementById('password').value;
-            const loginBtn = document.getElementById('loginBtn');
-            const errorMessage = document.getElementById('errorMessage');
-            const container = document.querySelector('.login-container');
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const btn = document.getElementById('loginBtn');
 
-            loginBtn.disabled = true;
-            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang đăng nhập...';
-            errorMessage.classList.remove('show');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
 
             try {
                 const response = await fetch('/api/login', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ password })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
                 });
 
                 const result = await response.json();
 
                 if (response.ok) {
-                    window.location.href = '/';
+                    showMessage('Đăng nhập thành công!', 'success');
+                    setTimeout(() => window.location.href = '/', 500);
                 } else {
-                    errorMessage.textContent = result.error || 'Đăng nhập thất bại';
-                    errorMessage.classList.add('show');
-                    container.classList.add('shake');
-                    setTimeout(() => container.classList.remove('shake'), 400);
+                    showMessage(result.error || 'Đăng nhập thất bại', 'error');
                 }
             } catch (error) {
-                errorMessage.textContent = 'Có lỗi xảy ra. Vui lòng thử lại.';
-                errorMessage.classList.add('show');
+                showMessage('Lỗi kết nối. Vui lòng thử lại.', 'error');
             } finally {
-                loginBtn.disabled = false;
-                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Đăng Nhập';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-arrow-right"></i> Đăng Nhập';
             }
         }
 
-        // Auto focus password field
-        document.getElementById('password').focus();
+        async function handleRegister(e) {
+            e.preventDefault();
+
+            const username = document.getElementById('regUsername').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const avatar_url = document.getElementById('regAvatar').value.trim() || null;
+            const btn = document.getElementById('registerBtn');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tạo...';
+
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password, avatar_url })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showMessage('Tạo tài khoản thành công!', 'success');
+                    setTimeout(() => window.location.href = '/', 500);
+                } else {
+                    showMessage(result.error || 'Đăng ký thất bại', 'error');
+                }
+            } catch (error) {
+                showMessage('Lỗi kết nối. Vui lòng thử lại.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-user-plus"></i> Tạo Tài Khoản';
+            }
+        }
+
+        // Auto focus
+        document.getElementById('loginUsername').focus();
     </script>
 </body>
 </html>
