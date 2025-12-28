@@ -8,14 +8,16 @@ let currentSpinRound = 0;
 let spinResults = [];
 let currentRotation = 0;
 
+const DEFAULT_PLAYERS = ['Huy', 'Vàng', 'Thành', 'Mạnh'];
+
 async function initWheel() {
     try {
         const res = await fetch('/api/stats/people', { credentials: 'include' });
         const data = await res.json();
         wheelPeople = data.map(p => p.name);
-        if (wheelPeople.length === 0) wheelPeople = ['Người 1', 'Người 2', 'Người 3'];
+        if (wheelPeople.length === 0) wheelPeople = [...DEFAULT_PLAYERS];
     } catch (e) {
-        wheelPeople = ['Người 1', 'Người 2', 'Người 3'];
+        wheelPeople = [...DEFAULT_PLAYERS];
     }
 }
 

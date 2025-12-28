@@ -15,10 +15,13 @@ let diceGameState = {
 };
 
 const DICE_FACES = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+const DEFAULT_DICE_PLAYERS = ['Huy', 'Vàng', 'Thành', 'Mạnh'];
 
 function openDiceModal() {
+    // Use wheelPeople if available, otherwise use default
+    const players = (wheelPeople && wheelPeople.length > 0) ? wheelPeople : DEFAULT_DICE_PLAYERS;
     diceGameState = {
-        players: [...wheelPeople],
+        players: [...players],
         selectedPlayers: [],
         totalRounds: 1,
         currentRound: 1,

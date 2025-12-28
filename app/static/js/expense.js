@@ -11,9 +11,9 @@ async function loadExpenseData() {
             fetch('/api/expenses', { credentials: 'include' })
         ]);
 
-        const stats = await statsRes.json();
-        const people = await peopleRes.json();
-        const expenses = await expensesRes.json();
+        const stats = statsRes.ok ? await statsRes.json() : { total_amount: 0, total_count: 0, average_amount: 0 };
+        const people = peopleRes.ok ? await peopleRes.json() : [];
+        const expenses = expensesRes.ok ? await expensesRes.json() : [];
 
         // Update stats
         document.getElementById('totalAmount').textContent = formatMoney(stats.total_amount);

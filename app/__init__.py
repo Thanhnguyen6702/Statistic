@@ -58,9 +58,7 @@ def register_views(app):
 
     @app.route('/')
     def index():
-        """Dashboard - main page after login."""
-        if not session.get('user_id'):
-            return redirect(url_for('login_page'))
+        """Dashboard - main page."""
         return render_template('dashboard.html')
 
     @app.route('/login')

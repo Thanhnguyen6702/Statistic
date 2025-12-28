@@ -289,7 +289,7 @@ async function joinGameRoom() {
 async function loadLeaderboard() {
     try {
         const res = await fetch('/api/game/stats/leaderboard', { credentials: 'include' });
-        const data = await res.json();
+        const data = res.ok ? await res.json() : [];
 
         document.getElementById('leaderboard').innerHTML = data.length ? data.map((u, i) => `
             <tr>
@@ -301,7 +301,7 @@ async function loadLeaderboard() {
             </tr>
         `).join('') : '<tr><td colspan="5" style="text-align:center;color:#718096;">Chưa có dữ liệu</td></tr>';
     } catch (e) {
-        console.error('Failed to load leaderboard:', e);
+        document.getElementById('leaderboard').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#718096;">Chưa có dữ liệu</td></tr>';
     }
 }
 
