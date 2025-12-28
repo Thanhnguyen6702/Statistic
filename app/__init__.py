@@ -6,7 +6,7 @@ import os
 from flask import Flask, render_template, session, redirect, url_for
 
 from config import config
-from app.extensions import db, socketio
+from app.extensions import db
 from app.api import register_blueprints
 
 
@@ -32,11 +32,6 @@ def create_app(config_name=None):
 
     # Initialize extensions
     db.init_app(app)
-    socketio.init_app(app, async_mode='gevent')
-
-    # Initialize socket handlers AFTER socketio.init_app
-    from app.sockets import init_sockets
-    init_sockets()
 
     # Register blueprints
     register_blueprints(app)
@@ -84,13 +79,10 @@ def register_views(app):
 
         room_code = room_code.upper()
 
-        # Check in-memory game first (for realtime games)
-        from app.sockets.game_events import get_game_state, game_to_dict
-        game = get_game_state(room_code)
-
-        if game:
-            # Use in-memory game data
-            return render_template('game_room.html', room=game_to_dict(room_code))
+        # Check in lobby API's in-memory storage
+        from app.api.lobby import game_rooms
+        if room_code in game_rooms:
+            return render_template('game_room.html', room={'room_code': room_code})
 
         # Fallback: room not found
         return redirect(url_for('index'))

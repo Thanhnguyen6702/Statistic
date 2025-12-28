@@ -6,23 +6,15 @@
     <title>Game Room - Oẳn Tù Tì</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
             font-family: 'Inter', sans-serif;
             min-height: 100vh;
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             padding: 20px;
         }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
+        .container { max-width: 900px; margin: 0 auto; }
         .room-header {
             display: flex;
             justify-content: space-between;
@@ -33,13 +25,7 @@
             border-radius: 16px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
-
-        .room-code-box {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
+        .room-code-box { display: flex; align-items: center; gap: 12px; }
         .room-code {
             font-size: 1.5rem;
             font-weight: 700;
@@ -49,7 +35,6 @@
             padding: 8px 16px;
             border-radius: 8px;
         }
-
         .btn-copy {
             padding: 8px 12px;
             background: #e2e8f0;
@@ -59,9 +44,7 @@
             color: #4a5568;
             transition: all 0.3s;
         }
-
         .btn-copy:hover { background: #cbd5e0; }
-
         .btn-leave {
             padding: 10px 20px;
             background: #e53e3e;
@@ -72,9 +55,7 @@
             cursor: pointer;
             transition: all 0.3s;
         }
-
         .btn-leave:hover { background: #c53030; }
-
         .game-status {
             text-align: center;
             margin-bottom: 20px;
@@ -84,7 +65,6 @@
             font-weight: 600;
             color: #2d3748;
         }
-
         .game-arena {
             display: grid;
             grid-template-columns: 1fr auto 1fr;
@@ -92,7 +72,6 @@
             align-items: center;
             margin-bottom: 24px;
         }
-
         .player-card {
             background: white;
             padding: 24px;
@@ -100,11 +79,9 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
             text-align: center;
         }
-
         .player-card.host { border-top: 4px solid #f5576c; }
         .player-card.guest { border-top: 4px solid #667eea; }
         .player-card.waiting { opacity: 0.6; }
-
         .player-avatar {
             width: 80px;
             height: 80px;
@@ -118,21 +95,18 @@
             font-weight: bold;
             margin: 0 auto 12px;
         }
-
         .player-avatar img {
             width: 100%;
             height: 100%;
             border-radius: 50%;
             object-fit: cover;
         }
-
         .player-name {
             font-size: 1.25rem;
             font-weight: 600;
             color: #2d3748;
             margin-bottom: 8px;
         }
-
         .player-choice {
             font-size: 64px;
             height: 80px;
@@ -141,23 +115,14 @@
             justify-content: center;
             margin: 16px 0;
         }
-
-        .player-status {
-            color: #718096;
-            font-size: 0.9rem;
-        }
-
-        .vs-box {
-            text-align: center;
-        }
-
+        .player-status { color: #718096; font-size: 0.9rem; }
+        .vs-box { text-align: center; }
         .vs-text {
             font-size: 2rem;
             font-weight: 700;
             color: white;
             text-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
-
         .score-display {
             background: white;
             padding: 8px 24px;
@@ -166,17 +131,14 @@
             font-weight: 700;
             font-size: 1.5rem;
         }
-
         .score-host { color: #f5576c; }
         .score-guest { color: #667eea; }
-
         .choice-buttons {
             display: flex;
             justify-content: center;
             gap: 20px;
             margin-bottom: 24px;
         }
-
         .choice-btn {
             width: 120px;
             height: 120px;
@@ -190,41 +152,27 @@
             align-items: center;
             justify-content: center;
         }
-
         .choice-btn:hover:not(:disabled) {
             transform: scale(1.1);
             border-color: #f5576c;
             box-shadow: 0 8px 30px rgba(245, 87, 108, 0.3);
         }
-
-        .choice-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
+        .choice-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .choice-btn.selected {
             border-color: #48bb78;
             background: #f0fff4;
             transform: scale(1.1);
         }
-
         .result-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.8);
             display: none;
             align-items: center;
             justify-content: center;
             z-index: 1000;
         }
-
-        .result-overlay.show {
-            display: flex;
-        }
-
+        .result-overlay.show { display: flex; }
         .result-box {
             background: white;
             padding: 40px 60px;
@@ -232,38 +180,15 @@
             text-align: center;
             animation: popIn 0.5s ease;
         }
-
         @keyframes popIn {
             from { transform: scale(0.5); opacity: 0; }
             to { transform: scale(1); opacity: 1; }
         }
-
-        .result-icon {
-            font-size: 80px;
-            margin-bottom: 16px;
-        }
-
-        .result-title {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-
+        .result-icon { font-size: 80px; margin-bottom: 16px; }
+        .result-title { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
         .result-title.win { color: #48bb78; }
         .result-title.lose { color: #e53e3e; }
-        .result-title.draw { color: #667eea; }
-
-        .result-message {
-            color: #718096;
-            margin-bottom: 24px;
-        }
-
-        .result-actions {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-        }
-
+        .result-actions { display: flex; gap: 12px; justify-content: center; margin-top: 24px; }
         .btn-rematch {
             padding: 12px 24px;
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
@@ -272,13 +197,7 @@
             color: white;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
         }
-
-        .btn-rematch:hover {
-            transform: translateY(-2px);
-        }
-
         .btn-back {
             padding: 12px 24px;
             background: #e2e8f0;
@@ -287,9 +206,7 @@
             color: #4a5568;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
         }
-
         .waiting-message {
             text-align: center;
             padding: 40px;
@@ -297,16 +214,8 @@
             border-radius: 16px;
             margin-bottom: 24px;
         }
-
-        .waiting-message h2 {
-            color: #2d3748;
-            margin-bottom: 16px;
-        }
-
-        .waiting-message p {
-            color: #718096;
-        }
-
+        .waiting-message h2 { color: #2d3748; margin-bottom: 16px; }
+        .waiting-message p { color: #718096; }
         .notification {
             position: fixed;
             top: 20px;
@@ -317,29 +226,17 @@
             font-weight: 600;
             z-index: 10000;
             animation: slideIn 0.3s ease;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
         }
-
         .notification.success { background: #48bb78; }
         .notification.error { background: #e53e3e; }
-
         @keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
-
         @media (max-width: 700px) {
-            .game-arena {
-                grid-template-columns: 1fr;
-            }
-            .vs-box {
-                order: -1;
-            }
-            .choice-btn {
-                width: 90px;
-                height: 90px;
-                font-size: 36px;
-            }
+            .game-arena { grid-template-columns: 1fr; }
+            .vs-box { order: -1; }
+            .choice-btn { width: 90px; height: 90px; font-size: 36px; }
         }
     </style>
 </head>
@@ -362,13 +259,13 @@
 
         <div id="waitingArea" class="waiting-message" style="display: none;">
             <h2><i class="fas fa-hourglass-half"></i> Đang chờ đối thủ...</h2>
-            <p>Chia sẻ mã phòng <strong id="shareCode">{{ room.room_code }}</strong> cho bạn bè!</p>
+            <p>Chia sẻ mã phòng <strong>{{ room.room_code }}</strong> cho bạn bè!</p>
         </div>
 
         <div id="gameArea" style="display: none;">
             <div class="game-arena">
-                <div class="player-card host" id="hostCard">
-                    <div class="player-avatar" id="hostAvatar"></div>
+                <div class="player-card host">
+                    <div class="player-avatar" id="hostAvatar">?</div>
                     <div class="player-name" id="hostName">Host</div>
                     <div class="player-choice" id="hostChoice">?</div>
                     <div class="player-status" id="hostStatus">Đang chờ...</div>
@@ -383,8 +280,8 @@
                     </div>
                 </div>
 
-                <div class="player-card guest" id="guestCard">
-                    <div class="player-avatar" id="guestAvatar"></div>
+                <div class="player-card guest">
+                    <div class="player-avatar" id="guestAvatar">?</div>
                     <div class="player-name" id="guestName">Guest</div>
                     <div class="player-choice" id="guestChoice">?</div>
                     <div class="player-status" id="guestStatus">Đang chờ...</div>
@@ -405,9 +302,6 @@
             <div class="result-title" id="resultTitle"></div>
             <div class="result-message" id="resultMessage"></div>
             <div class="result-actions">
-                <button class="btn-rematch" onclick="requestRematch()">
-                    <i class="fas fa-redo"></i> Chơi Lại
-                </button>
                 <button class="btn-back" onclick="goToLobby()">
                     <i class="fas fa-home"></i> Về Lobby
                 </button>
@@ -419,202 +313,70 @@
         const ROOM_CODE = '{{ room.room_code }}';
         const choiceEmoji = { rock: '&#9994;', paper: '&#9995;', scissors: '&#9996;' };
 
-        let socket = null;
         let currentUser = null;
         let roomData = null;
         let isHost = false;
         let myChoice = null;
-
-        // Connection management
-        let reconnectAttempts = 0;
-        const MAX_RECONNECT_ATTEMPTS = 10;
-        const BASE_RECONNECT_DELAY = 1000;
-        let heartbeatInterval = null;
-        let lastPong = Date.now();
-        let connectionStatus = 'disconnected';
+        let pollingInterval = null;
+        let lastUpdate = 0;
+        let lastRoundsCount = 0;
 
         async function init() {
-            // Get current user
             try {
-                const response = await fetch('/api/me');
-                if (!response.ok) {
+                const res = await fetch('/api/me', { credentials: 'include' });
+                if (!res.ok) {
                     window.location.href = '/login';
                     return;
                 }
-                currentUser = await response.json();
-            } catch (error) {
+                currentUser = await res.json();
+            } catch (e) {
                 window.location.href = '/login';
                 return;
             }
 
-            // Connect socket immediately - room data comes via socket
-            initSocket();
+            // Initial fetch
+            await fetchRoomState();
+
+            // Poll every 1.5 seconds for game state
+            pollingInterval = setInterval(fetchRoomState, 1500);
         }
 
-        function initSocket() {
-            // Dispose existing socket if any
-            if (socket) {
-                socket.disconnect();
-                socket = null;
-            }
+        async function fetchRoomState() {
+            try {
+                const res = await fetch(`/api/lobby/room/${ROOM_CODE}/state`, { credentials: 'include' });
 
-            socket = io({
-                reconnection: true,
-                reconnectionAttempts: MAX_RECONNECT_ATTEMPTS,
-                reconnectionDelay: BASE_RECONNECT_DELAY,
-                reconnectionDelayMax: 10000,
-                timeout: 20000,
-                transports: ['websocket', 'polling']
-            });
-
-            socket.on('connect', () => {
-                console.log('Connected to server');
-                connectionStatus = 'connected';
-                reconnectAttempts = 0;
-                updateConnectionIndicator(true);
-
-                // Join room with user_id for authentication
-                socket.emit('join_game_room', {
-                    room_code: ROOM_CODE,
-                    user_id: currentUser ? currentUser.id : null
-                });
-
-                // Start heartbeat
-                startHeartbeat();
-
-                // Request room state with user_id
-                socket.emit('get_room_state', {
-                    room_code: ROOM_CODE,
-                    user_id: currentUser ? currentUser.id : null
-                });
-            });
-
-            socket.on('disconnect', (reason) => {
-                console.log('Disconnected:', reason);
-                connectionStatus = 'disconnected';
-                updateConnectionIndicator(false);
-                stopHeartbeat();
-
-                if (reason === 'io server disconnect') {
-                    // Server disconnected us, try to reconnect
-                    socket.connect();
+                if (!res.ok) {
+                    if (res.status === 404) {
+                        showNotification('Phòng không tồn tại', 'error');
+                        setTimeout(() => window.location.href = '/', 2000);
+                    }
+                    return;
                 }
-            });
 
-            socket.on('connect_error', (error) => {
-                console.error('Connection error:', error);
-                reconnectAttempts++;
-                updateConnectionIndicator(false);
+                const data = await res.json();
 
-                if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-                    showNotification('Mất kết nối. Đang tải lại...', 'error');
-                    setTimeout(() => location.reload(), 2000);
-                }
-            });
+                // Check if state changed
+                if (data.last_update !== lastUpdate) {
+                    lastUpdate = data.last_update;
+                    roomData = data;
+                    isHost = data.host && data.host.id === currentUser.id;
+                    updateUI();
 
-            socket.on('pong', (data) => {
-                lastPong = Date.now();
-            });
-
-            socket.on('error', (data) => {
-                showNotification(data.message, 'error');
-            });
-
-            socket.on('player_joined', (data) => {
-                roomData = data.room;
-                if (roomData && currentUser) {
-                    isHost = roomData.host.id === currentUser.id;
-                }
-                updateUI();
-                if (data.user && data.user.id !== currentUser.id) {
-                    showNotification(data.user.username + ' đã tham gia!', 'success');
-                }
-            });
-
-            socket.on('player_left', (data) => {
-                if (data.user_id !== currentUser.id) {
-                    showNotification('Đối thủ đã rời phòng', 'error');
-                    setTimeout(() => window.location.href = '/game', 2000);
-                }
-            });
-
-            socket.on('player_disconnected', (data) => {
-                if (data.user_id !== currentUser.id) {
-                    showNotification('Đối thủ mất kết nối', 'error');
-                }
-            });
-
-            socket.on('choice_made', (data) => {
-                if (data.user_id !== currentUser.id) {
-                    const statusEl = isHost ? document.getElementById('guestStatus') : document.getElementById('hostStatus');
-                    statusEl.textContent = 'Đã chọn!';
-                    statusEl.style.color = '#48bb78';
-                }
-            });
-
-            socket.on('round_result', (data) => {
-                showRoundResult(data);
-            });
-
-            socket.on('match_result', (data) => {
-                showMatchResult(data);
-            });
-
-            socket.on('rematch_requested', (data) => {
-                window.location.href = '/game/room/' + data.new_room_code;
-            });
-
-            socket.on('room_state', (data) => {
-                roomData = data.room;
-                if (roomData && currentUser) {
-                    isHost = roomData.host.id === currentUser.id;
-                }
-                updateUI();
-            });
-
-            socket.on('error', (data) => {
-                console.error('Socket error:', data);
-                if (data.message === 'Room not found') {
-                    showNotification('Phòng không tồn tại hoặc đã hết hạn', 'error');
-                    setTimeout(() => window.location.href = '/game', 2000);
-                } else {
-                    showNotification(data.message, 'error');
-                }
-            });
-        }
-
-        function startHeartbeat() {
-            stopHeartbeat();
-            lastPong = Date.now();
-
-            heartbeatInterval = setInterval(() => {
-                if (socket && socket.connected) {
-                    socket.emit('ping');
-
-                    // Check if we missed too many pongs (connection might be dead)
-                    if (Date.now() - lastPong > 30000) {
-                        console.warn('Heartbeat timeout, reconnecting...');
-                        socket.disconnect();
-                        socket.connect();
+                    // Check for new round results
+                    if (data.rounds && data.rounds.length > lastRoundsCount) {
+                        const latestRound = data.rounds[data.rounds.length - 1];
+                        showRoundResult(latestRound, data);
+                        lastRoundsCount = data.rounds.length;
                     }
                 }
-            }, 10000); // Ping every 10 seconds
-        }
 
-        function stopHeartbeat() {
-            if (heartbeatInterval) {
-                clearInterval(heartbeatInterval);
-                heartbeatInterval = null;
-            }
-        }
+                // Check if match finished
+                if (data.status === 'finished' && !document.getElementById('resultOverlay').classList.contains('show')) {
+                    showMatchResult(data);
+                }
 
-        function updateConnectionIndicator(connected) {
-            const statusEl = document.getElementById('gameStatus');
-            if (connected) {
-                statusEl.style.borderLeft = '4px solid #48bb78';
-            } else {
-                statusEl.style.borderLeft = '4px solid #e53e3e';
-                statusEl.textContent = 'Đang kết nối lại...';
+            } catch (e) {
+                console.error('Fetch room state error:', e);
             }
         }
 
@@ -625,11 +387,25 @@
             const gameArea = document.getElementById('gameArea');
             const statusEl = document.getElementById('gameStatus');
 
-            // Update players
-            updatePlayerCard('host', roomData.host);
-            if (roomData.guest) {
-                updatePlayerCard('guest', roomData.guest);
+            // Update host
+            if (roomData.host) {
+                document.getElementById('hostName').textContent = roomData.host.username + (roomData.host.id === currentUser.id ? ' (Bạn)' : '');
+                document.getElementById('hostAvatar').textContent = roomData.host.username[0].toUpperCase();
+                document.getElementById('hostStatus').textContent = roomData.host.ready ? 'Đã chọn!' : 'Đang chờ...';
+                document.getElementById('hostStatus').style.color = roomData.host.ready ? '#48bb78' : '#718096';
             }
+
+            // Update guest
+            if (roomData.guest) {
+                document.getElementById('guestName').textContent = roomData.guest.username + (roomData.guest.id === currentUser.id ? ' (Bạn)' : '');
+                document.getElementById('guestAvatar').textContent = roomData.guest.username[0].toUpperCase();
+                document.getElementById('guestStatus').textContent = roomData.guest.ready ? 'Đã chọn!' : 'Đang chờ...';
+                document.getElementById('guestStatus').style.color = roomData.guest.ready ? '#48bb78' : '#718096';
+            }
+
+            // Update scores
+            if (roomData.host) document.getElementById('scoreHost').textContent = roomData.host.score;
+            if (roomData.guest) document.getElementById('scoreGuest').textContent = roomData.guest.score;
 
             if (roomData.status === 'waiting') {
                 waitingArea.style.display = 'block';
@@ -642,36 +418,14 @@
             } else if (roomData.status === 'finished') {
                 statusEl.textContent = 'Trận đấu kết thúc!';
             }
-
-            // Update scores
-            document.getElementById('scoreHost').textContent = roomData.host_score;
-            document.getElementById('scoreGuest').textContent = roomData.guest_score;
         }
 
-        function updatePlayerCard(role, player) {
-            if (!player) return;
-
-            const avatarEl = document.getElementById(role + 'Avatar');
-            const nameEl = document.getElementById(role + 'Name');
-
-            if (player.avatar_url) {
-                avatarEl.innerHTML = `<img src="${player.avatar_url}" alt="avatar">`;
-            } else {
-                avatarEl.textContent = player.username[0].toUpperCase();
-            }
-
-            nameEl.textContent = player.username;
-            if (player.id === currentUser.id) {
-                nameEl.textContent += ' (Bạn)';
-            }
-        }
-
-        function makeChoice(choice) {
-            if (myChoice || connectionStatus !== 'connected') return;
+        async function makeChoice(choice) {
+            if (myChoice) return;
 
             myChoice = choice;
 
-            // Optimistic UI update - immediately show selection
+            // Update UI immediately
             document.querySelectorAll('.choice-btn').forEach(btn => {
                 btn.classList.remove('selected');
                 if (btn.dataset.choice === choice) {
@@ -680,84 +434,74 @@
                 btn.disabled = true;
             });
 
-            // Update my status immediately
             const myStatusEl = isHost ? document.getElementById('hostStatus') : document.getElementById('guestStatus');
             myStatusEl.textContent = 'Đã chọn!';
             myStatusEl.style.color = '#48bb78';
 
-            // Send to server with user_id for authentication
-            socket.emit('make_choice', {
-                room_code: ROOM_CODE,
-                choice: choice,
-                user_id: currentUser ? currentUser.id : null
-            });
+            try {
+                const res = await fetch(`/api/lobby/room/${ROOM_CODE}/choice`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ choice })
+                });
+
+                if (!res.ok) {
+                    const data = await res.json();
+                    showNotification(data.error || 'Lỗi', 'error');
+                }
+            } catch (e) {
+                showNotification('Lỗi kết nối', 'error');
+            }
         }
 
-        function showRoundResult(data) {
-            const round = data.round;
-            roomData = data.room;
-
-            // Show choices with animation
-            const hostChoiceEl = document.getElementById('hostChoice');
-            const guestChoiceEl = document.getElementById('guestChoice');
-
-            gsap.to([hostChoiceEl, guestChoiceEl], {
-                scale: 1.3,
-                duration: 0.3,
-                onComplete: () => {
-                    hostChoiceEl.innerHTML = choiceEmoji[round.host_choice];
-                    guestChoiceEl.innerHTML = choiceEmoji[round.guest_choice];
-                }
-            });
-
-            gsap.to([hostChoiceEl, guestChoiceEl], {
-                scale: 1,
-                duration: 0.3,
-                delay: 0.3
-            });
+        function showRoundResult(round, data) {
+            // Show choices
+            document.getElementById('hostChoice').innerHTML = choiceEmoji[round.host_choice];
+            document.getElementById('guestChoice').innerHTML = choiceEmoji[round.guest_choice];
 
             // Update scores
+            if (data.host) document.getElementById('scoreHost').textContent = data.host.score;
+            if (data.guest) document.getElementById('scoreGuest').textContent = data.guest.score;
+
+            // Show result notification
+            let resultText = '';
+            if (round.result === 'draw') {
+                resultText = 'Hòa!';
+            } else if ((round.result === 'host' && isHost) || (round.result === 'guest' && !isHost)) {
+                resultText = 'Bạn thắng lượt này!';
+            } else {
+                resultText = 'Bạn thua lượt này!';
+            }
+            showNotification(resultText, 'success');
+
+            // Reset for next round after delay
             setTimeout(() => {
-                document.getElementById('scoreHost').textContent = roomData.host_score;
-                document.getElementById('scoreGuest').textContent = roomData.guest_score;
+                myChoice = null;
+                document.getElementById('hostChoice').innerHTML = '?';
+                document.getElementById('guestChoice').innerHTML = '?';
+                document.getElementById('hostStatus').textContent = 'Đang chờ...';
+                document.getElementById('hostStatus').style.color = '#718096';
+                document.getElementById('guestStatus').textContent = 'Đang chờ...';
+                document.getElementById('guestStatus').style.color = '#718096';
 
-                // Determine round winner
-                let resultText = '';
-                if (round.result === 'draw') {
-                    resultText = 'Hòa!';
-                } else if ((round.result === 'host' && isHost) || (round.result === 'guest' && !isHost)) {
-                    resultText = 'Bạn thắng lượt này!';
-                } else {
-                    resultText = 'Bạn thua lượt này!';
-                }
-                showNotification(resultText, round.result === 'draw' ? 'success' : 'success');
+                document.querySelectorAll('.choice-btn').forEach(btn => {
+                    btn.classList.remove('selected');
+                    btn.disabled = false;
+                });
 
-                // Reset for next round
-                setTimeout(() => {
-                    resetRound();
-                    document.getElementById('gameStatus').textContent = `Lượt ${roomData.current_round} / Bộ ${roomData.best_of}`;
-                }, 1500);
-            }, 800);
-        }
-
-        function resetRound() {
-            myChoice = null;
-            document.getElementById('hostChoice').innerHTML = '?';
-            document.getElementById('guestChoice').innerHTML = '?';
-            document.getElementById('hostStatus').textContent = 'Đang chờ...';
-            document.getElementById('hostStatus').style.color = '#718096';
-            document.getElementById('guestStatus').textContent = 'Đang chờ...';
-            document.getElementById('guestStatus').style.color = '#718096';
-
-            document.querySelectorAll('.choice-btn').forEach(btn => {
-                btn.classList.remove('selected');
-                btn.disabled = false;
-            });
+                document.getElementById('gameStatus').textContent = `Lượt ${data.current_round} / Bộ ${data.best_of}`;
+            }, 2000);
         }
 
         function showMatchResult(data) {
-            roomData = data.room;
-            const isWinner = data.winner_id === currentUser.id;
+            // Stop polling
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+            }
+
+            const isWinner = (isHost && data.host.score > data.guest.score) ||
+                            (!isHost && data.guest.score > data.host.score);
 
             const overlay = document.getElementById('resultOverlay');
             const iconEl = document.getElementById('resultIcon');
@@ -779,13 +523,6 @@
             overlay.classList.add('show');
         }
 
-        function requestRematch() {
-            socket.emit('request_rematch', {
-                room_code: ROOM_CODE,
-                user_id: currentUser ? currentUser.id : null
-            });
-        }
-
         function goToLobby() {
             window.location.href = '/';
         }
@@ -793,8 +530,11 @@
         async function leaveRoom() {
             if (confirm('Bạn có chắc muốn rời phòng?')) {
                 try {
-                    await fetch(`/api/game/room/${ROOM_CODE}/leave`, { method: 'POST' });
-                } catch (error) {}
+                    await fetch(`/api/lobby/room/${ROOM_CODE}/leave`, {
+                        method: 'POST',
+                        credentials: 'include'
+                    });
+                } catch (e) {}
                 window.location.href = '/';
             }
         }
@@ -806,34 +546,24 @@
         }
 
         function showNotification(message, type) {
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.textContent = message;
-            document.body.appendChild(notification);
-
+            const n = document.createElement('div');
+            n.className = `notification ${type}`;
+            n.textContent = message;
+            document.body.appendChild(n);
             setTimeout(() => {
-                notification.style.animation = 'slideIn 0.3s ease reverse';
-                setTimeout(() => notification.remove(), 300);
+                n.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(() => n.remove(), 300);
             }, 3000);
         }
 
         // Cleanup on page unload
         window.addEventListener('beforeunload', () => {
-            stopHeartbeat();
-            if (socket) {
-                socket.emit('leave_game_room', {
-                    room_code: ROOM_CODE,
-                    user_id: currentUser ? currentUser.id : null
-                });
-                socket.disconnect();
-            }
-        });
-
-        // Handle visibility change (tab switch)
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible' && socket && !socket.connected) {
-                socket.connect();
-            }
+            if (pollingInterval) clearInterval(pollingInterval);
+            fetch(`/api/lobby/room/${ROOM_CODE}/leave`, {
+                method: 'POST',
+                credentials: 'include',
+                keepalive: true
+            }).catch(() => {});
         });
 
         // Initialize

@@ -1,4 +1,7 @@
-/* ============ DICE GAME ============ */
+/* ============ DICE GAME (2-6 players) ============ */
+
+const MIN_PLAYERS = 2;
+const MAX_PLAYERS = 6;
 
 let diceGameState = {
     players: [],
@@ -32,6 +35,7 @@ function openDiceModal() {
 
     renderDicePlayerSelect();
     setupDiceRoundButtons();
+    updateSelectedCount();
 
     document.getElementById('diceModal').classList.add('show');
 }
@@ -49,14 +53,23 @@ function renderDicePlayerSelect() {
     `).join('');
 }
 
+function updateSelectedCount() {
+    const countEl = document.getElementById('diceSelectedCount');
+    if (countEl) {
+        const count = diceGameState.selectedPlayers.length;
+        countEl.textContent = `(${count}/${MAX_PLAYERS})`;
+        countEl.style.color = count >= MIN_PLAYERS ? '#48bb78' : '#718096';
+    }
+}
+
 function toggleDicePlayer(name) {
     const idx = diceGameState.selectedPlayers.indexOf(name);
     if (idx > -1) {
         diceGameState.selectedPlayers.splice(idx, 1);
-    } else if (diceGameState.selectedPlayers.length < 3) {
+    } else if (diceGameState.selectedPlayers.length < MAX_PLAYERS) {
         diceGameState.selectedPlayers.push(name);
     } else {
-        showNotification('Chỉ được chọn 3 người!', 'error');
+        showNotification(`Tối đa ${MAX_PLAYERS} người!`, 'error');
         return;
     }
 
@@ -67,6 +80,28 @@ function toggleDicePlayer(name) {
             btn.classList.remove('selected');
         }
     });
+
+    updateSelectedCount();
+}
+
+function selectAllDicePlayers() {
+    diceGameState.selectedPlayers = diceGameState.players.slice(0, MAX_PLAYERS);
+    document.querySelectorAll('.dice-player-btn').forEach(btn => {
+        if (diceGameState.selectedPlayers.includes(btn.dataset.name)) {
+            btn.classList.add('selected');
+        } else {
+            btn.classList.remove('selected');
+        }
+    });
+    updateSelectedCount();
+}
+
+function deselectAllDicePlayers() {
+    diceGameState.selectedPlayers = [];
+    document.querySelectorAll('.dice-player-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    updateSelectedCount();
 }
 
 function setupDiceRoundButtons() {
@@ -80,8 +115,8 @@ function setupDiceRoundButtons() {
 }
 
 function startDiceGame() {
-    if (diceGameState.selectedPlayers.length !== 3) {
-        showNotification('Vui lòng chọn đúng 3 người chơi!', 'error');
+    if (diceGameState.selectedPlayers.length < MIN_PLAYERS) {
+        showNotification(`Cần ít nhất ${MIN_PLAYERS} người chơi!`, 'error');
         return;
     }
 
@@ -102,12 +137,17 @@ function startDiceGame() {
 
 function updateDiceGameUI() {
     const currentPlayer = diceGameState.selectedPlayers[diceGameState.currentPlayerIndex];
+    const numPlayers = diceGameState.selectedPlayers.length;
 
     document.getElementById('diceRoundInfo').innerHTML =
         `<i class="fas fa-sync"></i> Lượt ${diceGameState.currentRound} / ${diceGameState.totalRounds}`;
 
     document.getElementById('currentPlayerTurn').innerHTML =
         `<i class="fas fa-user"></i> Đến lượt: <strong style="color: #43e97b;">${currentPlayer}</strong>`;
+
+    // Adjust grid columns based on player count
+    const gridCols = numPlayers <= 3 ? numPlayers : Math.ceil(numPlayers / 2);
+    document.getElementById('dicePlayers').style.gridTemplateColumns = `repeat(${gridCols}, 1fr)`;
 
     const playersHtml = diceGameState.selectedPlayers.map((name, idx) => {
         const isActive = idx === diceGameState.currentPlayerIndex;
@@ -196,8 +236,8 @@ function showDiceResult() {
     const ranking = Object.entries(diceGameState.scores)
         .sort((a, b) => b[1] - a[1]);
 
-    const badges = ['🥇', '🥈', '🥉'];
-    const rankClasses = ['rank-1', 'rank-2', 'rank-3'];
+    const badges = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣', '6️⃣'];
+    const rankClasses = ['rank-1', 'rank-2', 'rank-3', '', '', ''];
 
     document.getElementById('diceRanking').innerHTML = ranking.map((entry, idx) => {
         const [name, score] = entry;
@@ -228,4 +268,5 @@ function resetDiceGame() {
     document.getElementById('diceCloseBtn').style.display = 'block';
 
     renderDicePlayerSelect();
+    updateSelectedCount();
 }

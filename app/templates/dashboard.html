@@ -170,7 +170,7 @@
                 <div class="game-card">
                     <div class="game-icon dice">&#127922;</div>
                     <h3>Xúc Xắc</h3>
-                    <p>3 người, ai cao điểm nhất thắng!</p>
+                    <p>2-6 người, ai cao điểm nhất thắng!</p>
                     <button class="btn-play" onclick="openDiceModal()">
                         <i class="fas fa-dice"></i> Chơi
                     </button>
@@ -229,15 +229,23 @@
     <!-- Dice Modal -->
     <div class="modal" id="diceModal">
         <div class="modal-content" style="max-width: 650px;">
-            <h2><i class="fas fa-dice"></i> Xúc Xắc - 3 Người Chơi</h2>
+            <h2><i class="fas fa-dice"></i> Xúc Xắc (2-6 người)</h2>
 
             <!-- Setup Phase -->
             <div id="diceSetup">
                 <div style="margin-bottom: 16px;">
                     <label style="font-weight: 600; display: block; margin-bottom: 8px;">
-                        <i class="fas fa-users"></i> Chọn 3 người chơi:
+                        <i class="fas fa-users"></i> Chọn người chơi: <span id="diceSelectedCount" style="color: #718096;">(0/6)</span>
                     </label>
-                    <div id="dicePlayerSelect" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+                    <div id="dicePlayerSelect" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;"></div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn-secondary" onclick="selectAllDicePlayers()" style="padding: 6px 12px; font-size: 0.85rem;">
+                            <i class="fas fa-check-double"></i> Chọn tất cả
+                        </button>
+                        <button class="btn-secondary" onclick="deselectAllDicePlayers()" style="padding: 6px 12px; font-size: 0.85rem;">
+                            <i class="fas fa-times"></i> Bỏ chọn
+                        </button>
+                    </div>
                 </div>
 
                 <div style="margin-bottom: 16px;">
@@ -259,7 +267,7 @@
             <!-- Game Phase -->
             <div id="diceGame" style="display: none;">
                 <div id="diceRoundInfo" style="text-align: center; margin-bottom: 16px; font-weight: 600; color: #667eea;"></div>
-                <div id="dicePlayers" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;"></div>
+                <div id="dicePlayers" style="display: grid; gap: 12px; margin-bottom: 20px;"></div>
                 <div id="diceArea" style="text-align: center; margin: 20px 0;">
                     <div id="currentPlayerTurn" style="font-size: 1.1rem; font-weight: 600; margin-bottom: 12px; color: #2d3748;"></div>
                     <div id="diceDisplay" style="font-size: 80px; margin: 20px 0; min-height: 100px; display: flex; justify-content: center; align-items: center; gap: 10px;">
@@ -346,8 +354,7 @@
         </div>
     </div>
 
-    <!-- JavaScript Files -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+    <!-- JavaScript Files (Polling-based, no WebSocket) -->
     <script src="/static/js/utils.js"></script>
     <script src="/static/js/expense.js"></script>
     <script src="/static/js/wheel.js"></script>

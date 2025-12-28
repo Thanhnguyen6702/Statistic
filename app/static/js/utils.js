@@ -36,14 +36,14 @@ function switchTab(tab) {
     if (tab === 'expense') {
         document.querySelectorAll('.nav-tab')[0].classList.add('active');
         document.getElementById('expenseTab').classList.add('active');
-        // Leave lobby when switching away from games
-        if (typeof lobbySocket !== 'undefined' && lobbySocket && lobbySocket.connected) {
-            lobbySocket.emit('leave_lobby');
+        // Stop polling when leaving games tab
+        if (typeof stopLobbyPolling === 'function') {
+            stopLobbyPolling();
         }
     } else {
         document.querySelectorAll('.nav-tab')[1].classList.add('active');
         document.getElementById('gamesTab').classList.add('active');
-        // Join lobby when entering games tab
+        // Start polling when entering games tab
         if (typeof initLobbySocket === 'function') {
             initLobbySocket();
         }

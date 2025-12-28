@@ -3,7 +3,7 @@ API package - All API blueprints.
 """
 
 from app.api import auth, expenses, history, archive, stats, admin
-from app.api import game_room, game_stats
+from app.api import game_room, game_stats, lobby
 
 
 def register_blueprints(app):
@@ -30,3 +30,6 @@ def register_blueprints(app):
     # Game routes
     app.register_blueprint(game_room.bp, url_prefix='/api/game/room')
     app.register_blueprint(game_stats.bp, url_prefix='/api/game/stats')
+
+    # Lobby routes (polling-based, no WebSocket)
+    app.register_blueprint(lobby.bp, url_prefix='/api/lobby')

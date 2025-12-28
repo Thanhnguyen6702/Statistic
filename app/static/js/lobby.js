@@ -1,95 +1,88 @@
-/* ============ MULTIPLAYER LOBBY (Socket.IO) ============ */
+/* ============ MULTIPLAYER LOBBY (Polling-based, no WebSocket) ============ */
 
-let lobbySocket = null;
 let onlinePlayers = [];
 let pendingInviteId = null;
 let selectedBestOf = 3;
+let pollingInterval = null;
+let isInLobby = false;
 
+// Start polling when entering games tab
 function initLobbySocket() {
-    if (lobbySocket) {
-        lobbySocket.disconnect();
-        lobbySocket = null;
+    if (isInLobby) return;
+    isInLobby = true;
+
+    console.log('Starting lobby polling...');
+
+    // Initial fetch
+    fetchOnlinePlayers();
+    sendHeartbeat();
+
+    // Poll every 3 seconds
+    pollingInterval = setInterval(() => {
+        if (isInLobby) {
+            sendHeartbeat();
+            fetchOnlinePlayers();
+        }
+    }, 3000);
+}
+
+// Stop polling when leaving games tab
+function stopLobbyPolling() {
+    isInLobby = false;
+    if (pollingInterval) {
+        clearInterval(pollingInterval);
+        pollingInterval = null;
     }
 
-    console.log('Initializing lobby socket...');
+    // Notify server we're leaving
+    fetch('/api/lobby/leave', {
+        method: 'POST',
+        credentials: 'include'
+    }).catch(() => {});
+}
 
-    lobbySocket = io({
-        withCredentials: true,
-        transports: ['polling', 'websocket'],
-        reconnection: true,
-        reconnectionAttempts: 5,
-        reconnectionDelay: 1000
-    });
+// Send heartbeat to stay online
+async function sendHeartbeat() {
+    try {
+        const res = await fetch('/api/lobby/heartbeat', {
+            method: 'POST',
+            credentials: 'include'
+        });
 
-    lobbySocket.on('connect', () => {
-        console.log('Socket connected! SID:', lobbySocket.id);
-        lobbySocket.emit('join_lobby', { user_id: currentUser ? currentUser.id : null });
-    });
+        if (res.ok) {
+            const data = await res.json();
 
-    lobbySocket.on('connected', (data) => {
-        console.log('Server confirmed connection:', data);
-    });
+            // Check for redirect (invite was accepted by other player)
+            if (data.redirect) {
+                window.location.href = data.redirect;
+                return;
+            }
 
-    lobbySocket.on('joined_lobby', (data) => {
-        console.log('Joined lobby successfully:', data);
-    });
-
-    lobbySocket.on('lobby_users', (data) => {
-        console.log('Received lobby users:', data);
-        onlinePlayers = data.users || [];
-        renderOnlinePlayers();
-    });
-
-    lobbySocket.on('error', (data) => {
-        console.error('Socket error:', data);
-        showNotification(data.message, 'error');
-    });
-
-    lobbySocket.on('game_invite', (data) => {
-        if (currentUser && data.to_user_id === currentUser.id) {
-            showInviteToast(data);
+            // Check for pending invites
+            if (data.pending_invites && data.pending_invites.length > 0) {
+                const invite = data.pending_invites[0];
+                if (invite.invite_id !== pendingInviteId) {
+                    showInviteToast(invite);
+                }
+            }
         }
-    });
+    } catch (e) {
+        console.error('Heartbeat failed:', e);
+    }
+}
 
-    lobbySocket.on('invite_sent', (data) => {
-        showNotification('Đã gửi lời mời!', 'success');
-    });
-
-    lobbySocket.on('invite_declined', (data) => {
-        showNotification(data.declined_by.username + ' đã từ chối lời mời', 'error');
-    });
-
-    lobbySocket.on('game_started', (data) => {
-        window.location.href = '/game/room/' + data.room_code;
-    });
-
-    lobbySocket.on('room_created', (data) => {
-        console.log('Room created:', data);
-        closeModal('rpsModal');
-        window.location.href = '/game/room/' + data.room_code;
-    });
-
-    lobbySocket.on('room_joined', (data) => {
-        console.log('Room joined:', data);
-        closeModal('rpsModal');
-        window.location.href = '/game/room/' + data.room_code;
-    });
-
-    lobbySocket.on('disconnect', (reason) => {
-        console.log('Disconnected from lobby:', reason);
-        onlinePlayers = [];
-        renderOnlinePlayers();
-    });
-
-    lobbySocket.on('connect_error', (error) => {
-        console.error('Socket connection error:', error);
-        document.getElementById('onlinePlayersGrid').innerHTML = `
-            <div class="no-players">
-                <i class="fas fa-exclamation-triangle"></i>
-                <p>Lỗi kết nối. <a href="javascript:initLobbySocket()">Thử lại</a></p>
-            </div>
-        `;
-    });
+// Fetch online players list
+async function fetchOnlinePlayers() {
+    try {
+        const res = await fetch('/api/lobby/online', { credentials: 'include' });
+        if (res.ok) {
+            const data = await res.json();
+            onlinePlayers = data.users || [];
+            renderOnlinePlayers();
+        }
+    } catch (e) {
+        console.error('Failed to fetch online players:', e);
+    }
 }
 
 function renderOnlinePlayers() {
@@ -99,16 +92,6 @@ function renderOnlinePlayers() {
     if (!grid || !count) return;
 
     count.textContent = onlinePlayers.length + ' online';
-
-    if (!lobbySocket || !lobbySocket.connected) {
-        grid.innerHTML = `
-            <div class="no-players">
-                <i class="fas fa-spinner fa-spin"></i>
-                <p>Đang kết nối...</p>
-            </div>
-        `;
-        return;
-    }
 
     if (onlinePlayers.length === 0) {
         grid.innerHTML = `
@@ -138,63 +121,95 @@ function renderOnlinePlayers() {
     }).join('');
 }
 
-function invitePlayer(playerId, playerName) {
-    if (!lobbySocket || !lobbySocket.connected) {
-        showNotification('Chưa kết nối, đang thử lại...', 'error');
-        initLobbySocket();
-        return;
-    }
+async function invitePlayer(playerId, playerName) {
+    try {
+        const res = await fetch('/api/lobby/invite', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+                to_user_id: playerId,
+                best_of: selectedBestOf
+            })
+        });
 
-    lobbySocket.emit('invite_player', {
-        to_user_id: playerId,
-        best_of: selectedBestOf
-    });
+        const data = await res.json();
+
+        if (res.ok) {
+            showNotification('Đã gửi lời mời!', 'success');
+        } else {
+            showNotification(data.error || 'Lỗi gửi lời mời', 'error');
+        }
+    } catch (e) {
+        showNotification('Lỗi kết nối', 'error');
+    }
 }
 
-function showInviteToast(data) {
+function showInviteToast(invite) {
     const container = document.getElementById('inviteToastContainer');
-    pendingInviteId = data.invite_id;
+    pendingInviteId = invite.invite_id;
 
-    const avatarContent = data.from_user.avatar_url
-        ? `<img src="${data.from_user.avatar_url}" alt="">`
-        : data.from_user.username[0].toUpperCase();
+    const avatarContent = invite.from_user.avatar_url
+        ? `<img src="${invite.from_user.avatar_url}" alt="">`
+        : invite.from_user.username[0].toUpperCase();
 
     container.innerHTML = `
-        <div class="invite-toast" id="inviteToast-${data.invite_id}">
+        <div class="invite-toast" id="inviteToast-${invite.invite_id}">
             <div class="invite-toast-header">
                 <div class="invite-toast-avatar">${avatarContent}</div>
                 <div class="invite-toast-info">
-                    <h4>${data.from_user.username}</h4>
-                    <p>Mời bạn chơi Oẳn Tù Tì (Bộ ${data.best_of})</p>
+                    <h4>${invite.from_user.username}</h4>
+                    <p>Mời bạn chơi Oẳn Tù Tì (Bộ ${invite.best_of})</p>
                 </div>
             </div>
             <div class="invite-toast-actions">
-                <button class="btn-accept" onclick="acceptInvite('${data.invite_id}')">
+                <button class="btn-accept" onclick="acceptInvite('${invite.invite_id}')">
                     <i class="fas fa-check"></i> Chấp Nhận
                 </button>
-                <button class="btn-decline" onclick="declineInvite('${data.invite_id}')">
+                <button class="btn-decline" onclick="declineInvite('${invite.invite_id}')">
                     <i class="fas fa-times"></i> Từ Chối
                 </button>
             </div>
         </div>
     `;
 
+    // Auto decline after 30 seconds
     setTimeout(() => {
-        if (pendingInviteId === data.invite_id) {
-            declineInvite(data.invite_id);
+        if (pendingInviteId === invite.invite_id) {
+            declineInvite(invite.invite_id);
         }
     }, 30000);
 }
 
-function acceptInvite(inviteId) {
-    if (!lobbySocket) return;
-    lobbySocket.emit('accept_invite', { invite_id: inviteId });
+async function acceptInvite(inviteId) {
+    try {
+        const res = await fetch(`/api/lobby/invite/${inviteId}/accept`, {
+            method: 'POST',
+            credentials: 'include'
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.redirect) {
+            window.location.href = data.redirect;
+        } else {
+            showNotification(data.error || 'Lỗi', 'error');
+        }
+    } catch (e) {
+        showNotification('Lỗi kết nối', 'error');
+    }
+
     removeInviteToast(inviteId);
 }
 
-function declineInvite(inviteId) {
-    if (!lobbySocket) return;
-    lobbySocket.emit('decline_invite', { invite_id: inviteId });
+async function declineInvite(inviteId) {
+    try {
+        await fetch(`/api/lobby/invite/${inviteId}/decline`, {
+            method: 'POST',
+            credentials: 'include'
+        });
+    } catch (e) {}
+
     removeInviteToast(inviteId);
 }
 
@@ -213,46 +228,62 @@ function openRPSModal() {
     document.getElementById('rpsModal').classList.add('show');
 }
 
-function createGameRoom() {
-    if (!lobbySocket || !lobbySocket.connected) {
-        showNotification('Chưa kết nối, vui lòng chờ...', 'error');
-        return;
-    }
-
+async function createGameRoom() {
     if (!currentUser) {
         showNotification('Chưa đăng nhập', 'error');
         return;
     }
 
-    lobbySocket.emit('create_room', {
-        best_of: selectedBestOf,
-        user_id: currentUser.id
-    });
-    showNotification('Đang tạo phòng...', 'success');
+    try {
+        const res = await fetch('/api/lobby/room/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ best_of: selectedBestOf })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.redirect) {
+            closeModal('rpsModal');
+            window.location.href = data.redirect;
+        } else {
+            showNotification(data.error || 'Lỗi tạo phòng', 'error');
+        }
+    } catch (e) {
+        showNotification('Lỗi kết nối', 'error');
+    }
 }
 
-function joinGameRoom() {
+async function joinGameRoom() {
     const code = document.getElementById('joinRoomCode').value.trim().toUpperCase();
     if (!code || code.length !== 6) {
         showNotification('Nhập mã phòng 6 ký tự', 'error');
         return;
     }
 
-    if (!lobbySocket || !lobbySocket.connected) {
-        showNotification('Chưa kết nối, vui lòng chờ...', 'error');
-        return;
-    }
-
     if (!currentUser) {
         showNotification('Chưa đăng nhập', 'error');
         return;
     }
 
-    lobbySocket.emit('join_room_by_code', {
-        room_code: code,
-        user_id: currentUser.id
-    });
-    showNotification('Đang tham gia phòng...', 'success');
+    try {
+        const res = await fetch(`/api/lobby/room/${code}/join`, {
+            method: 'POST',
+            credentials: 'include'
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.redirect) {
+            closeModal('rpsModal');
+            window.location.href = data.redirect;
+        } else {
+            showNotification(data.error || 'Lỗi vào phòng', 'error');
+        }
+    } catch (e) {
+        showNotification('Lỗi kết nối', 'error');
+    }
 }
 
 async function loadLeaderboard() {
