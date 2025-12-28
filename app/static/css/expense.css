@@ -1,0 +1,126 @@
+/* ============ EXPENSE STYLES ============ */
+
+/* Expense Form */
+.expense-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr 2fr auto;
+    gap: 12px;
+    align-items: end;
+}
+
+@media (max-width: 768px) {
+    .expense-form {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* People Stats */
+.people-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+}
+
+.person-card {
+    background: #f7fafc;
+    padding: 16px;
+    border-radius: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.person-card:hover {
+    background: #edf2f7;
+    transform: translateY(-2px);
+}
+
+.person-card .name {
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 4px;
+}
+
+.person-card .amount {
+    color: #667eea;
+    font-weight: 700;
+}
+
+/* Balance Section */
+.balance-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+}
+
+.balance-card {
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+    padding: 16px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.balance-card .name {
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 8px;
+}
+
+.balance-card .amount {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.balance-card .amount.positive {
+    color: #48bb78;
+}
+
+.balance-card .amount.negative {
+    color: #e53e3e;
+}
+
+.balance-card .amount.neutral {
+    color: #718096;
+}
+
+.balance-card .label {
+    font-size: 0.8rem;
+    color: #718096;
+    margin-top: 4px;
+}
+
+.balance-details {
+    margin-top: 16px;
+}
+
+.balance-transaction {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    margin-bottom: 8px;
+}
+
+.balance-transaction .parties {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.balance-transaction .arrow {
+    color: #667eea;
+    font-weight: bold;
+}
+
+.balance-transaction .amount {
+    font-weight: 700;
+    color: #e53e3e;
+}
+
+/* Leaderboard */
+.leaderboard {
+    margin-top: 24px;
+}
