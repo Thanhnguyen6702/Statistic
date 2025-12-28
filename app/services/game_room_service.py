@@ -7,6 +7,7 @@ from datetime import datetime
 from app.extensions import db
 from app.models import GameRoom, GameRound, GameMatch
 from app.services.user_service import UserService
+from app.utils.decorators import db_retry
 
 
 class GameRoomService:
@@ -20,6 +21,7 @@ class GameRoomService:
     }
 
     @staticmethod
+    @db_retry(max_retries=3)
     def create_room(host_id, best_of=3):
         """Create a new game room."""
         room = GameRoom(
@@ -32,6 +34,7 @@ class GameRoomService:
         return room
 
     @staticmethod
+    @db_retry(max_retries=3)
     def join_room(room_code, guest_id):
         """Join an existing room."""
         room = GameRoom.query.filter_by(room_code=room_code.upper()).first()
@@ -55,6 +58,7 @@ class GameRoomService:
         return room
 
     @staticmethod
+    @db_retry(max_retries=3)
     def leave_room(room_id, user_id):
         """Leave a room (forfeit if game in progress)."""
         room = GameRoom.query.get(room_id)
@@ -81,6 +85,7 @@ class GameRoomService:
         db.session.commit()
 
     @staticmethod
+    @db_retry(max_retries=3)
     def create_round(room_id):
         """Create a new round in the room."""
         room = GameRoom.query.get(room_id)
@@ -97,6 +102,7 @@ class GameRoomService:
         return round_obj
 
     @staticmethod
+    @db_retry(max_retries=3)
     def get_current_round(room_id):
         """Get the current active round for a room."""
         room = GameRoom.query.get(room_id)

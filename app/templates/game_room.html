@@ -425,6 +425,14 @@
         let isHost = false;
         let myChoice = null;
 
+        // Connection management
+        let reconnectAttempts = 0;
+        const MAX_RECONNECT_ATTEMPTS = 10;
+        const BASE_RECONNECT_DELAY = 1000;
+        let heartbeatInterval = null;
+        let lastPong = Date.now();
+        let connectionStatus = 'disconnected';
+
         async function init() {
             // Get current user
             try {
@@ -439,35 +447,67 @@
                 return;
             }
 
-            // Get room data
-            await loadRoom();
-
-            // Connect socket
+            // Connect socket immediately - room data comes via socket
             initSocket();
         }
 
-        async function loadRoom() {
-            try {
-                const response = await fetch(`/api/game/room/${ROOM_CODE}`);
-                if (!response.ok) {
-                    showNotification('Phòng không tồn tại', 'error');
-                    setTimeout(() => window.location.href = '/game', 2000);
-                    return;
-                }
-                roomData = await response.json();
-                isHost = roomData.host.id === currentUser.id;
-                updateUI();
-            } catch (error) {
-                console.error('Failed to load room:', error);
-            }
-        }
-
         function initSocket() {
-            socket = io();
+            // Dispose existing socket if any
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+            }
+
+            socket = io({
+                reconnection: true,
+                reconnectionAttempts: MAX_RECONNECT_ATTEMPTS,
+                reconnectionDelay: BASE_RECONNECT_DELAY,
+                reconnectionDelayMax: 10000,
+                timeout: 20000,
+                transports: ['websocket', 'polling']
+            });
 
             socket.on('connect', () => {
                 console.log('Connected to server');
+                connectionStatus = 'connected';
+                reconnectAttempts = 0;
+                updateConnectionIndicator(true);
+
+                // Join room - this will trigger player_joined with room data
                 socket.emit('join_game_room', { room_code: ROOM_CODE });
+
+                // Start heartbeat
+                startHeartbeat();
+
+                // Always request room state to get latest
+                socket.emit('get_room_state', { room_code: ROOM_CODE });
+            });
+
+            socket.on('disconnect', (reason) => {
+                console.log('Disconnected:', reason);
+                connectionStatus = 'disconnected';
+                updateConnectionIndicator(false);
+                stopHeartbeat();
+
+                if (reason === 'io server disconnect') {
+                    // Server disconnected us, try to reconnect
+                    socket.connect();
+                }
+            });
+
+            socket.on('connect_error', (error) => {
+                console.error('Connection error:', error);
+                reconnectAttempts++;
+                updateConnectionIndicator(false);
+
+                if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+                    showNotification('Mất kết nối. Đang tải lại...', 'error');
+                    setTimeout(() => location.reload(), 2000);
+                }
+            });
+
+            socket.on('pong', (data) => {
+                lastPong = Date.now();
             });
 
             socket.on('error', (data) => {
@@ -476,8 +516,11 @@
 
             socket.on('player_joined', (data) => {
                 roomData = data.room;
+                if (roomData && currentUser) {
+                    isHost = roomData.host.id === currentUser.id;
+                }
                 updateUI();
-                if (data.user.id !== currentUser.id) {
+                if (data.user && data.user.id !== currentUser.id) {
                     showNotification(data.user.username + ' đã tham gia!', 'success');
                 }
             });
@@ -517,8 +560,56 @@
 
             socket.on('room_state', (data) => {
                 roomData = data.room;
+                if (roomData && currentUser) {
+                    isHost = roomData.host.id === currentUser.id;
+                }
                 updateUI();
             });
+
+            socket.on('error', (data) => {
+                console.error('Socket error:', data);
+                if (data.message === 'Room not found') {
+                    showNotification('Phòng không tồn tại hoặc đã hết hạn', 'error');
+                    setTimeout(() => window.location.href = '/game', 2000);
+                } else {
+                    showNotification(data.message, 'error');
+                }
+            });
+        }
+
+        function startHeartbeat() {
+            stopHeartbeat();
+            lastPong = Date.now();
+
+            heartbeatInterval = setInterval(() => {
+                if (socket && socket.connected) {
+                    socket.emit('ping');
+
+                    // Check if we missed too many pongs (connection might be dead)
+                    if (Date.now() - lastPong > 30000) {
+                        console.warn('Heartbeat timeout, reconnecting...');
+                        socket.disconnect();
+                        socket.connect();
+                    }
+                }
+            }, 10000); // Ping every 10 seconds
+        }
+
+        function stopHeartbeat() {
+            if (heartbeatInterval) {
+                clearInterval(heartbeatInterval);
+                heartbeatInterval = null;
+            }
+        }
+
+        function updateConnectionIndicator(connected) {
+            const statusEl = document.getElementById('gameStatus');
+            if (connected) {
+                statusEl.style.borderLeft = '4px solid #48bb78';
+            } else {
+                statusEl.style.borderLeft = '4px solid #e53e3e';
+                statusEl.textContent = 'Đang kết nối lại...';
+            }
         }
 
         function updateUI() {
@@ -570,11 +661,11 @@
         }
 
         function makeChoice(choice) {
-            if (myChoice) return;
+            if (myChoice || connectionStatus !== 'connected') return;
 
             myChoice = choice;
 
-            // Highlight selected
+            // Optimistic UI update - immediately show selection
             document.querySelectorAll('.choice-btn').forEach(btn => {
                 btn.classList.remove('selected');
                 if (btn.dataset.choice === choice) {
@@ -583,12 +674,12 @@
                 btn.disabled = true;
             });
 
-            // Update my status
+            // Update my status immediately
             const myStatusEl = isHost ? document.getElementById('hostStatus') : document.getElementById('guestStatus');
             myStatusEl.textContent = 'Đã chọn!';
             myStatusEl.style.color = '#48bb78';
 
-            // Send to server
+            // Send to server with acknowledgement
             socket.emit('make_choice', {
                 room_code: ROOM_CODE,
                 choice: choice
@@ -715,6 +806,22 @@
                 setTimeout(() => notification.remove(), 300);
             }, 3000);
         }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            stopHeartbeat();
+            if (socket) {
+                socket.emit('leave_game_room', { room_code: ROOM_CODE });
+                socket.disconnect();
+            }
+        });
+
+        // Handle visibility change (tab switch)
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && socket && !socket.connected) {
+                socket.connect();
+            }
+        });
 
         // Initialize
         init();

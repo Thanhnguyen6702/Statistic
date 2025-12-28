@@ -25,6 +25,22 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
+    # Connection pool settings for stability
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_size': 5,              # Number of connections to keep open
+        'pool_timeout': 30,          # Seconds to wait for a connection
+        'pool_recycle': 300,         # Recycle connections after 5 minutes
+        'pool_pre_ping': True,       # Test connections before using
+        'max_overflow': 10,          # Extra connections when pool is full
+        'connect_args': {
+            'connect_timeout': 10,   # Connection timeout in seconds
+            'keepalives': 1,
+            'keepalives_idle': 30,
+            'keepalives_interval': 10,
+            'keepalives_count': 5
+        }
+    }
+
 
 class DevelopmentConfig(Config):
     """Development configuration."""

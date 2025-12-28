@@ -80,11 +80,19 @@ def register_views(app):
         """Game room page for playing."""
         if not session.get('user_id'):
             return redirect(url_for('login_page'))
-        from app.services import GameRoomService
-        room = GameRoomService.get_room_by_code(room_code)
-        if not room:
-            return redirect(url_for('index'))
-        return render_template('game_room.html', room=room.to_dict())
+
+        room_code = room_code.upper()
+
+        # Check in-memory game first (for realtime games)
+        from app.sockets.game_events import get_game_state, game_to_dict
+        game = get_game_state(room_code)
+
+        if game:
+            # Use in-memory game data
+            return render_template('game_room.html', room=game_to_dict(room_code))
+
+        # Fallback: room not found
+        return redirect(url_for('index'))
 
 
 # Create app instance for gunicorn (gunicorn app:app)

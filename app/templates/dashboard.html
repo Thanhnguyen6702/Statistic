@@ -245,6 +245,31 @@
             box-shadow: 0 4px 15px rgba(102,126,234,0.4);
         }
 
+        .btn-add.editing {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+
+        .form-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-cancel {
+            padding: 12px 20px;
+            background: #e2e8f0;
+            border: none;
+            border-radius: 10px;
+            color: #4a5568;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .btn-cancel:hover {
+            background: #cbd5e0;
+        }
+
         /* People Stats */
         .people-grid {
             display: grid;
@@ -514,27 +539,52 @@
         /* Spin Wheel */
         .wheel-container {
             position: relative;
-            width: 300px;
-            height: 300px;
-            margin: 20px auto;
+            width: 320px;
+            height: 320px;
+            margin: 24px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .wheel {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            border: 8px solid #667eea;
+        .wheel-canvas-wrapper {
             position: relative;
-            transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            box-shadow: 0 0 0 8px #667eea, 0 0 0 12px #764ba2, 0 8px 30px rgba(102,126,234,0.4);
+        }
+
+        #wheelCanvas {
+            border-radius: 50%;
         }
 
         .wheel-pointer {
             position: absolute;
-            top: -20px;
+            top: -8px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 32px;
+            font-size: 36px;
             z-index: 10;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+            color: #e53e3e;
+        }
+
+        .wheel-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            z-index: 5;
         }
 
         /* Responsive */
@@ -576,6 +626,46 @@
             border-color: #667eea;
             background: #eef2ff;
             color: #667eea;
+        }
+
+        .spin-count-btn {
+            padding: 8px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .spin-count-btn:hover {
+            border-color: #667eea;
+        }
+
+        .spin-count-btn.active {
+            border-color: #667eea;
+            background: #eef2ff;
+            color: #667eea;
+        }
+
+        .wheel-participant {
+            padding: 8px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 20px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .wheel-participant:hover {
+            border-color: #667eea;
+        }
+
+        .wheel-participant.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: transparent;
+            color: white;
         }
 
         /* Participant checkbox styles */
@@ -679,6 +769,208 @@
             color: #667eea;
             border-radius: 10px;
         }
+
+        /* Online Players */
+        .online-section {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 24px;
+        }
+
+        .online-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .online-count {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #48bb78;
+            font-weight: 600;
+        }
+
+        .online-dot {
+            width: 10px;
+            height: 10px;
+            background: #48bb78;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .online-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .online-player {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: #f7fafc;
+            border-radius: 12px;
+            transition: all 0.3s;
+        }
+
+        .online-player:hover {
+            background: #edf2f7;
+        }
+
+        .online-player.is-me {
+            background: #eef2ff;
+            border: 2px solid #667eea;
+        }
+
+        .online-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .online-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .online-name {
+            flex: 1;
+            font-weight: 500;
+            color: #2d3748;
+        }
+
+        .btn-invite {
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-invite:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-invite:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Invite Modal */
+        .invite-toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: white;
+            padding: 20px 24px;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+            z-index: 10001;
+            max-width: 350px;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .invite-toast-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .invite-toast-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .invite-toast-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .invite-toast-info h4 {
+            color: #2d3748;
+            margin-bottom: 4px;
+        }
+
+        .invite-toast-info p {
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        .invite-toast-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .invite-toast-actions button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-accept {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+        }
+
+        .btn-decline {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .no-players {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+
+        .no-players i {
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
     </style>
 </head>
 <body>
@@ -741,9 +1033,14 @@
                         <label>Mục đích</label>
                         <input type="text" id="expensePurpose" placeholder="Mua gì..." required>
                     </div>
-                    <button type="submit" class="btn-add">
-                        <i class="fas fa-plus"></i> Thêm
-                    </button>
+                    <div class="form-buttons">
+                        <button type="submit" class="btn-add">
+                            <i class="fas fa-plus"></i> Thêm
+                        </button>
+                        <button type="button" class="btn-cancel" onclick="cancelEdit()" style="display: none;">
+                            <i class="fas fa-times"></i> Hủy
+                        </button>
+                    </div>
                 </form>
                 <div class="participants-section" style="margin-top: 16px;">
                     <label style="font-size: 0.85rem; color: #4a5568; font-weight: 500;">
@@ -785,13 +1082,40 @@
 
         <!-- GAMES TAB -->
         <div id="gamesTab" class="tab-content">
+            <!-- Online Players Section -->
+            <div class="online-section">
+                <div class="online-header">
+                    <div class="section-title" style="margin-bottom: 0;">
+                        <i class="fas fa-users"></i> Người Chơi Online
+                    </div>
+                    <div class="online-count">
+                        <span class="online-dot"></span>
+                        <span id="onlineCount">0 online</span>
+                    </div>
+                </div>
+
+                <div class="best-of-selector" style="margin-bottom: 16px;">
+                    <span style="color: #718096; margin-right: 8px;">Chế độ:</span>
+                    <button class="best-of-btn" data-value="1">Bộ 1</button>
+                    <button class="best-of-btn active" data-value="3">Bộ 3</button>
+                    <button class="best-of-btn" data-value="5">Bộ 5</button>
+                </div>
+
+                <div class="online-grid" id="onlinePlayersGrid">
+                    <div class="no-players">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Đang kết nối...</p>
+                    </div>
+                </div>
+            </div>
+
             <div class="games-grid">
                 <div class="game-card">
                     <div class="game-icon rps">&#9994;&#9995;&#9996;</div>
                     <h3>Oẳn Tù Tì</h3>
-                    <p>Chơi với bạn bè - Realtime!</p>
+                    <p>Mời người chơi online ở trên!</p>
                     <button class="btn-play" onclick="openRPSModal()">
-                        <i class="fas fa-play"></i> Chơi Ngay
+                        <i class="fas fa-door-open"></i> Vào Phòng
                     </button>
                 </div>
 
@@ -836,39 +1160,78 @@
     <div class="modal" id="rpsModal">
         <div class="modal-content">
             <h2><i class="fas fa-gamepad"></i> Oẳn Tù Tì</h2>
-            <div class="best-of-selector">
-                <button class="best-of-btn" data-value="1">Bộ 1</button>
-                <button class="best-of-btn active" data-value="3">Bộ 3</button>
-                <button class="best-of-btn" data-value="5">Bộ 5</button>
-            </div>
-            <div class="modal-buttons">
-                <button class="btn-primary" onclick="createGameRoom()">
+
+            <div style="margin-bottom: 20px;">
+                <h3 style="font-size: 1rem; margin-bottom: 12px;"><i class="fas fa-plus-circle"></i> Tạo Phòng Mới</h3>
+                <p style="color: #718096; margin-bottom: 12px; font-size: 0.9rem;">Tạo phòng và chia sẻ mã cho bạn bè</p>
+                <button class="btn-primary" onclick="createGameRoom()" style="width: 100%;">
                     <i class="fas fa-plus"></i> Tạo Phòng
                 </button>
             </div>
-            <div style="margin: 20px 0; color: #718096;">hoặc</div>
-            <input type="text" id="joinRoomCode" placeholder="Nhập mã phòng" maxlength="6">
-            <div class="modal-buttons">
-                <button class="btn-secondary" onclick="joinGameRoom()">
+
+            <div style="border-top: 1px solid #e2e8f0; padding-top: 20px;">
+                <h3 style="font-size: 1rem; margin-bottom: 12px;"><i class="fas fa-sign-in-alt"></i> Vào Phòng Có Sẵn</h3>
+                <p style="color: #718096; margin-bottom: 12px; font-size: 0.9rem;">Nhập mã phòng để tham gia</p>
+                <input type="text" id="joinRoomCode" placeholder="Nhập mã phòng 6 ký tự" maxlength="6" style="text-transform: uppercase;">
+                <button class="btn-primary" onclick="joinGameRoom()" style="width: 100%; margin-top: 8px;">
                     <i class="fas fa-sign-in-alt"></i> Tham Gia
                 </button>
+            </div>
+
+            <div class="modal-buttons" style="margin-top: 20px;">
                 <button class="btn-secondary" onclick="closeModal('rpsModal')">Đóng</button>
             </div>
         </div>
     </div>
 
+    <!-- Invite Toast Container -->
+    <div id="inviteToastContainer"></div>
+
     <!-- Wheel Modal -->
     <div class="modal" id="wheelModal">
-        <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-content" style="max-width: 600px;">
             <h2><i class="fas fa-sync"></i> Vòng Quay May Mắn</h2>
-            <div class="wheel-container">
-                <div class="wheel-pointer">&#9660;</div>
-                <canvas id="wheelCanvas" width="300" height="300"></canvas>
+
+            <!-- Chọn người tham gia -->
+            <div style="margin-bottom: 16px;">
+                <label style="font-weight: 600; display: block; margin-bottom: 8px;">
+                    <i class="fas fa-users"></i> Chọn người tham gia:
+                </label>
+                <div id="wheelParticipants" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;"></div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn-secondary" onclick="selectAllWheelParticipants()" style="padding: 6px 12px; font-size: 0.85rem;">
+                        <i class="fas fa-check-double"></i> Chọn tất cả
+                    </button>
+                    <button class="btn-secondary" onclick="deselectAllWheelParticipants()" style="padding: 6px 12px; font-size: 0.85rem;">
+                        <i class="fas fa-times"></i> Bỏ chọn
+                    </button>
+                </div>
             </div>
-            <button class="btn-primary" onclick="spinWheel()" id="spinBtn" style="margin-bottom: 16px;">
+
+            <!-- Số lần quay -->
+            <div style="margin-bottom: 16px;">
+                <label style="font-weight: 600; display: block; margin-bottom: 8px;">
+                    <i class="fas fa-redo"></i> Số lần quay:
+                </label>
+                <div style="display: flex; gap: 8px;">
+                    <button class="spin-count-btn active" data-count="1">1 lần</button>
+                    <button class="spin-count-btn" data-count="3">3 lần</button>
+                    <button class="spin-count-btn" data-count="5">5 lần</button>
+                </div>
+            </div>
+
+            <div class="wheel-container">
+                <div class="wheel-canvas-wrapper">
+                    <div class="wheel-pointer">▼</div>
+                    <canvas id="wheelCanvas" width="300" height="300"></canvas>
+                    <div class="wheel-center">🎯</div>
+                </div>
+            </div>
+            <button class="btn-primary" onclick="spinWheel()" id="spinBtn" style="margin-bottom: 16px; padding: 14px 32px; font-size: 1.1rem;">
                 <i class="fas fa-sync"></i> QUAY!
             </button>
-            <div id="wheelResult" style="font-size: 1.2rem; font-weight: 600; color: #667eea;"></div>
+            <div id="wheelResult" style="font-size: 1.3rem; font-weight: 700; color: #667eea; min-height: 40px;"></div>
+            <div id="wheelHistory" style="margin-top: 12px; font-size: 0.9rem; color: #718096; min-height: 24px;"></div>
             <div class="modal-buttons">
                 <button class="btn-secondary" onclick="closeModal('wheelModal')">Đóng</button>
             </div>
@@ -878,6 +1241,9 @@
     <script>
         let currentUser = null;
         let selectedBestOf = 3;
+        let lobbySocket = null;
+        let onlinePlayers = [];
+        let pendingInviteId = null;
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
@@ -896,9 +1262,222 @@
             });
         });
 
+        // ============ LOBBY SOCKET ============
+        function initLobbySocket() {
+            // Disconnect existing socket if any
+            if (lobbySocket) {
+                lobbySocket.disconnect();
+                lobbySocket = null;
+            }
+
+            console.log('Initializing lobby socket...');
+
+            // Connect with credentials - important for session
+            lobbySocket = io({
+                withCredentials: true,
+                transports: ['polling', 'websocket'],  // Start with polling for better compatibility
+                reconnection: true,
+                reconnectionAttempts: 5,
+                reconnectionDelay: 1000
+            });
+
+            lobbySocket.on('connect', () => {
+                console.log('Socket connected! SID:', lobbySocket.id);
+                lobbySocket.emit('join_lobby');
+            });
+
+            lobbySocket.on('connected', (data) => {
+                console.log('Server confirmed connection:', data);
+                if (data.error) {
+                    console.warn('Connection warning:', data.error);
+                }
+            });
+
+            lobbySocket.on('joined_lobby', (data) => {
+                console.log('Joined lobby successfully:', data);
+            });
+
+            lobbySocket.on('lobby_users', (data) => {
+                console.log('Received lobby users:', data);
+                onlinePlayers = data.users || [];
+                renderOnlinePlayers();
+            });
+
+            lobbySocket.on('error', (data) => {
+                console.error('Socket error:', data);
+                showNotification(data.message, 'error');
+            });
+
+            lobbySocket.on('game_invite', (data) => {
+                // Only show if this invite is for me
+                if (currentUser && data.to_user_id === currentUser.id) {
+                    showInviteToast(data);
+                }
+            });
+
+            lobbySocket.on('invite_sent', (data) => {
+                showNotification('Đã gửi lời mời!', 'success');
+            });
+
+            lobbySocket.on('invite_declined', (data) => {
+                showNotification(data.declined_by.username + ' đã từ chối lời mời', 'error');
+            });
+
+            lobbySocket.on('game_started', (data) => {
+                // Navigate to game room
+                window.location.href = '/game/room/' + data.room_code;
+            });
+
+            lobbySocket.on('room_created', (data) => {
+                console.log('Room created:', data);
+                closeModal('rpsModal');
+                window.location.href = '/game/room/' + data.room_code;
+            });
+
+            lobbySocket.on('room_joined', (data) => {
+                console.log('Room joined:', data);
+                closeModal('rpsModal');
+                window.location.href = '/game/room/' + data.room_code;
+            });
+
+            lobbySocket.on('disconnect', (reason) => {
+                console.log('Disconnected from lobby:', reason);
+                onlinePlayers = [];
+                renderOnlinePlayers();
+            });
+
+            lobbySocket.on('connect_error', (error) => {
+                console.error('Socket connection error:', error);
+                document.getElementById('onlinePlayersGrid').innerHTML = `
+                    <div class="no-players">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Lỗi kết nối. <a href="javascript:initLobbySocket()">Thử lại</a></p>
+                    </div>
+                `;
+            });
+        }
+
+        function renderOnlinePlayers() {
+            const grid = document.getElementById('onlinePlayersGrid');
+            const count = document.getElementById('onlineCount');
+
+            if (!grid || !count) return;
+
+            count.textContent = onlinePlayers.length + ' online';
+
+            if (!lobbySocket || !lobbySocket.connected) {
+                grid.innerHTML = `
+                    <div class="no-players">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Đang kết nối...</p>
+                    </div>
+                `;
+                return;
+            }
+
+            if (onlinePlayers.length === 0) {
+                grid.innerHTML = `
+                    <div class="no-players">
+                        <i class="fas fa-user-clock"></i>
+                        <p>Chưa có ai online. Hãy mời bạn bè!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = onlinePlayers.map(player => {
+                const isMe = currentUser && player.id === currentUser.id;
+                const avatarContent = player.avatar_url
+                    ? `<img src="${player.avatar_url}" alt="">`
+                    : (player.username ? player.username[0].toUpperCase() : '?');
+
+                return `
+                    <div class="online-player ${isMe ? 'is-me' : ''}">
+                        <div class="online-avatar">${avatarContent}</div>
+                        <span class="online-name">${player.username || 'Unknown'}${isMe ? ' (Bạn)' : ''}</span>
+                        ${!isMe ? `<button class="btn-invite" onclick="invitePlayer(${player.id}, '${player.username}')">
+                            <i class="fas fa-gamepad"></i> Mời
+                        </button>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function invitePlayer(playerId, playerName) {
+            if (!lobbySocket || !lobbySocket.connected) {
+                showNotification('Chưa kết nối, đang thử lại...', 'error');
+                initLobbySocket();
+                return;
+            }
+
+            lobbySocket.emit('invite_player', {
+                to_user_id: playerId,
+                best_of: selectedBestOf
+            });
+        }
+
+        function showInviteToast(data) {
+            const container = document.getElementById('inviteToastContainer');
+            pendingInviteId = data.invite_id;
+
+            const avatarContent = data.from_user.avatar_url
+                ? `<img src="${data.from_user.avatar_url}" alt="">`
+                : data.from_user.username[0].toUpperCase();
+
+            container.innerHTML = `
+                <div class="invite-toast" id="inviteToast-${data.invite_id}">
+                    <div class="invite-toast-header">
+                        <div class="invite-toast-avatar">${avatarContent}</div>
+                        <div class="invite-toast-info">
+                            <h4>${data.from_user.username}</h4>
+                            <p>Mời bạn chơi Oẳn Tù Tì (Bộ ${data.best_of})</p>
+                        </div>
+                    </div>
+                    <div class="invite-toast-actions">
+                        <button class="btn-accept" onclick="acceptInvite('${data.invite_id}')">
+                            <i class="fas fa-check"></i> Chấp Nhận
+                        </button>
+                        <button class="btn-decline" onclick="declineInvite('${data.invite_id}')">
+                            <i class="fas fa-times"></i> Từ Chối
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Auto decline after 30 seconds
+            setTimeout(() => {
+                if (pendingInviteId === data.invite_id) {
+                    declineInvite(data.invite_id);
+                }
+            }, 30000);
+        }
+
+        function acceptInvite(inviteId) {
+            if (!lobbySocket) return;
+            lobbySocket.emit('accept_invite', { invite_id: inviteId });
+            removeInviteToast(inviteId);
+        }
+
+        function declineInvite(inviteId) {
+            if (!lobbySocket) return;
+            lobbySocket.emit('decline_invite', { invite_id: inviteId });
+            removeInviteToast(inviteId);
+        }
+
+        function removeInviteToast(inviteId) {
+            const toast = document.getElementById('inviteToast-' + inviteId);
+            if (toast) {
+                toast.style.animation = 'slideUp 0.3s ease reverse';
+                setTimeout(() => toast.remove(), 300);
+            }
+            if (pendingInviteId === inviteId) {
+                pendingInviteId = null;
+            }
+        }
+
         async function loadUser() {
             try {
-                const res = await fetch('/api/me');
+                const res = await fetch('/api/me', { credentials: 'include' });
                 if (!res.ok) {
                     window.location.href = '/login';
                     return;
@@ -923,21 +1502,28 @@
             if (tab === 'expense') {
                 document.querySelectorAll('.nav-tab')[0].classList.add('active');
                 document.getElementById('expenseTab').classList.add('active');
+                // Leave lobby when switching away from games
+                if (lobbySocket && lobbySocket.connected) {
+                    lobbySocket.emit('leave_lobby');
+                }
             } else {
                 document.querySelectorAll('.nav-tab')[1].classList.add('active');
                 document.getElementById('gamesTab').classList.add('active');
+                // Join lobby when entering games tab
+                initLobbySocket();
             }
         }
 
         // ============ EXPENSE FUNCTIONS ============
         let allMembers = [];
+        let editingExpenseId = null; // Track which expense is being edited
 
         async function loadExpenseData() {
             try {
                 const [statsRes, peopleRes, expensesRes] = await Promise.all([
-                    fetch('/api/stats'),
-                    fetch('/api/stats/people'),
-                    fetch('/api/expenses')
+                    fetch('/api/stats', { credentials: 'include' }),
+                    fetch('/api/stats/people', { credentials: 'include' }),
+                    fetch('/api/expenses', { credentials: 'include' })
                 ]);
 
                 const stats = await statsRes.json();
@@ -974,6 +1560,9 @@
                     `;
                 }).join('');
 
+                // Store expenses for editing
+                window.allExpenses = expenses;
+
                 // Update expense list with participants
                 const list = document.getElementById('expenseList');
                 list.innerHTML = expenses.slice(0, 20).map(e => {
@@ -992,6 +1581,9 @@
                             </td>
                             <td>${new Date(e.date).toLocaleDateString('vi')}</td>
                             <td>
+                                <button class="btn-action btn-edit" onclick="editExpense(${e.id})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
                                 <button class="btn-action btn-delete" onclick="deleteExpense(${e.id})">
                                     <i class="fas fa-trash"></i>
                                 </button>
@@ -1133,6 +1725,59 @@
             return transactions;
         }
 
+        function editExpense(id) {
+            const expense = window.allExpenses.find(e => e.id === id);
+            if (!expense) {
+                showNotification('Không tìm thấy chi tiêu', 'error');
+                return;
+            }
+
+            // Populate form with expense data
+            document.getElementById('expenseName').value = expense.name;
+            document.getElementById('expenseAmount').value = expense.amount / 1000;
+            document.getElementById('expensePurpose').value = expense.purpose;
+
+            // Set participants checkboxes
+            document.querySelectorAll('#participantsCheckboxes input').forEach(cb => {
+                if (expense.participants && expense.participants.includes(cb.value)) {
+                    cb.checked = true;
+                    cb.closest('.participant-checkbox').classList.add('checked');
+                } else {
+                    cb.checked = false;
+                    cb.closest('.participant-checkbox').classList.remove('checked');
+                }
+            });
+
+            // Set editing mode
+            editingExpenseId = id;
+
+            // Change button text and show cancel button
+            const submitBtn = document.querySelector('.btn-add');
+            const cancelBtn = document.querySelector('.btn-cancel');
+            submitBtn.innerHTML = '<i class="fas fa-save"></i> Cập nhật';
+            submitBtn.classList.add('editing');
+            cancelBtn.style.display = 'inline-block';
+
+            // Scroll to form
+            document.getElementById('expenseForm').scrollIntoView({ behavior: 'smooth' });
+
+            showNotification('Đang sửa chi tiêu - Nhấn "Cập nhật" để lưu', 'success');
+        }
+
+        function cancelEdit() {
+            editingExpenseId = null;
+            document.getElementById('expenseForm').reset();
+            document.querySelectorAll('#participantsCheckboxes input').forEach(cb => {
+                cb.checked = false;
+                cb.closest('.participant-checkbox').classList.remove('checked');
+            });
+            const submitBtn = document.querySelector('.btn-add');
+            const cancelBtn = document.querySelector('.btn-cancel');
+            submitBtn.innerHTML = '<i class="fas fa-plus"></i> Thêm';
+            submitBtn.classList.remove('editing');
+            cancelBtn.style.display = 'none';
+        }
+
         async function addExpense(e) {
             e.preventDefault();
             const name = document.getElementById('expenseName').value.trim();
@@ -1141,20 +1786,28 @@
             const participants = getSelectedParticipants();
 
             try {
-                const res = await fetch('/api/expenses', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, amount, purpose, participants })
-                });
+                let res;
+                if (editingExpenseId) {
+                    // Update existing expense
+                    res = await fetch(`/api/expenses/${editingExpenseId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ name, amount, purpose, participants })
+                    });
+                } else {
+                    // Create new expense
+                    res = await fetch('/api/expenses', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ name, amount, purpose, participants })
+                    });
+                }
 
                 if (res.ok) {
-                    showNotification('Thêm thành công!', 'success');
-                    document.getElementById('expenseForm').reset();
-                    // Uncheck all participants
-                    document.querySelectorAll('#participantsCheckboxes input').forEach(cb => {
-                        cb.checked = false;
-                        cb.closest('.participant-checkbox').classList.remove('checked');
-                    });
+                    showNotification(editingExpenseId ? 'Cập nhật thành công!' : 'Thêm thành công!', 'success');
+                    cancelEdit(); // Reset form and editing state
                     loadExpenseData();
                 } else {
                     const err = await res.json();
@@ -1169,13 +1822,19 @@
             if (!confirm('Xóa chi tiêu này?')) return;
 
             try {
-                const res = await fetch(`/api/expenses/${id}`, { method: 'DELETE' });
+                const res = await fetch(`/api/expenses/${id}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
                 if (res.ok) {
                     showNotification('Đã xóa!', 'success');
                     loadExpenseData();
+                } else {
+                    const err = await res.json();
+                    showNotification(err.error || 'Lỗi khi xóa', 'error');
                 }
             } catch (e) {
-                showNotification('Lỗi', 'error');
+                showNotification('Lỗi kết nối', 'error');
             }
         }
 
@@ -1186,7 +1845,7 @@
         // ============ GAME FUNCTIONS ============
         async function loadLeaderboard() {
             try {
-                const res = await fetch('/api/game/stats/leaderboard');
+                const res = await fetch('/api/game/stats/leaderboard', { credentials: 'include' });
                 const data = await res.json();
 
                 document.getElementById('leaderboard').innerHTML = data.length ? data.map((u, i) => `
@@ -1215,119 +1874,277 @@
             document.getElementById(id).classList.remove('show');
         }
 
-        async function createGameRoom() {
-            try {
-                const res = await fetch('/api/game/room/create', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ best_of: selectedBestOf })
-                });
-
-                const data = await res.json();
-                if (res.ok) {
-                    window.location.href = '/game/room/' + data.room_code;
-                } else {
-                    showNotification(data.error || 'Lỗi tạo phòng', 'error');
-                }
-            } catch (e) {
-                showNotification('Lỗi kết nối', 'error');
+        function createGameRoom() {
+            if (!lobbySocket || !lobbySocket.connected) {
+                showNotification('Chưa kết nối, vui lòng chờ...', 'error');
+                return;
             }
+
+            lobbySocket.emit('create_room', { best_of: selectedBestOf });
+            showNotification('Đang tạo phòng...', 'success');
         }
 
-        async function joinGameRoom() {
+        function joinGameRoom() {
             const code = document.getElementById('joinRoomCode').value.trim().toUpperCase();
             if (!code || code.length !== 6) {
                 showNotification('Nhập mã phòng 6 ký tự', 'error');
                 return;
             }
 
-            try {
-                const res = await fetch(`/api/game/room/join/${code}`, { method: 'POST' });
-                const data = await res.json();
-
-                if (res.ok) {
-                    window.location.href = '/game/room/' + code;
-                } else {
-                    showNotification(data.error || 'Không thể tham gia', 'error');
-                }
-            } catch (e) {
-                showNotification('Lỗi kết nối', 'error');
+            if (!lobbySocket || !lobbySocket.connected) {
+                showNotification('Chưa kết nối, vui lòng chờ...', 'error');
+                return;
             }
+
+            lobbySocket.emit('join_room_by_code', { room_code: code });
+            showNotification('Đang tham gia phòng...', 'success');
         }
 
         // ============ WHEEL ============
         let wheelPeople = [];
+        let selectedWheelPeople = [];
         let isSpinning = false;
+        let spinCount = 1;
+        let currentSpinRound = 0;
+        let spinResults = [];
 
         async function initWheel() {
             try {
-                const res = await fetch('/api/stats/people');
+                const res = await fetch('/api/stats/people', { credentials: 'include' });
                 const data = await res.json();
                 wheelPeople = data.map(p => p.name);
                 if (wheelPeople.length === 0) wheelPeople = ['Người 1', 'Người 2', 'Người 3'];
-                drawWheel();
             } catch (e) {
                 wheelPeople = ['Người 1', 'Người 2', 'Người 3'];
-                drawWheel();
             }
         }
 
-        function drawWheel() {
-            const canvas = document.getElementById('wheelCanvas');
-            const ctx = canvas.getContext('2d');
-            const centerX = 150, centerY = 150, radius = 140;
-            const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#43e97b'];
+        function openWheelModal() {
+            renderWheelParticipants();
+            setupSpinCountButtons();
+            selectedWheelPeople = [...wheelPeople]; // Mặc định chọn tất cả
+            updateWheelParticipantsUI();
 
-            ctx.clearRect(0, 0, 300, 300);
+            // Reset wheel state
+            currentRotation = 0;
+            spinResults = [];
+            currentSpinRound = 0;
+            isSpinning = false;
 
-            const sliceAngle = (2 * Math.PI) / wheelPeople.length;
+            drawWheel(0);
+            document.getElementById('wheelResult').textContent = '';
+            document.getElementById('wheelHistory').textContent = '';
+            document.getElementById('spinBtn').innerHTML = '<i class="fas fa-sync"></i> QUAY!';
+            document.getElementById('spinBtn').disabled = false;
 
-            wheelPeople.forEach((name, i) => {
-                ctx.beginPath();
-                ctx.moveTo(centerX, centerY);
-                ctx.arc(centerX, centerY, radius, i * sliceAngle, (i + 1) * sliceAngle);
-                ctx.fillStyle = colors[i % colors.length];
-                ctx.fill();
-                ctx.stroke();
+            document.getElementById('wheelModal').classList.add('show');
+        }
 
-                // Text
-                ctx.save();
-                ctx.translate(centerX, centerY);
-                ctx.rotate(i * sliceAngle + sliceAngle / 2);
-                ctx.textAlign = 'right';
-                ctx.fillStyle = 'white';
-                ctx.font = 'bold 14px Inter';
-                ctx.fillText(name.substring(0, 10), radius - 20, 5);
-                ctx.restore();
+        function renderWheelParticipants() {
+            const container = document.getElementById('wheelParticipants');
+            container.innerHTML = wheelPeople.map(name => `
+                <span class="wheel-participant selected" onclick="toggleWheelParticipant('${name}')" data-name="${name}">
+                    ${name}
+                </span>
+            `).join('');
+        }
+
+        function updateWheelParticipantsUI() {
+            const participants = document.querySelectorAll('.wheel-participant');
+            participants.forEach(p => {
+                const name = p.dataset.name;
+                if (selectedWheelPeople.includes(name)) {
+                    p.classList.add('selected');
+                } else {
+                    p.classList.remove('selected');
+                }
+            });
+            drawWheel();
+        }
+
+        function toggleWheelParticipant(name) {
+            const idx = selectedWheelPeople.indexOf(name);
+            if (idx > -1) {
+                selectedWheelPeople.splice(idx, 1);
+            } else {
+                selectedWheelPeople.push(name);
+            }
+            updateWheelParticipantsUI();
+        }
+
+        function selectAllWheelParticipants() {
+            selectedWheelPeople = [...wheelPeople];
+            updateWheelParticipantsUI();
+        }
+
+        function deselectAllWheelParticipants() {
+            selectedWheelPeople = [];
+            updateWheelParticipantsUI();
+        }
+
+        function setupSpinCountButtons() {
+            document.querySelectorAll('.spin-count-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.spin-count-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    spinCount = parseInt(btn.dataset.count);
+                });
             });
         }
 
+        function drawWheel(rotationAngle = 0) {
+            const canvas = document.getElementById('wheelCanvas');
+            const ctx = canvas.getContext('2d');
+            const centerX = 150, centerY = 150, radius = 140;
+            const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#43e97b', '#48bb78', '#ed8936', '#38b2ac', '#d69e2e'];
+
+            ctx.clearRect(0, 0, 300, 300);
+
+            const people = selectedWheelPeople.length > 0 ? selectedWheelPeople : ['?'];
+            const sliceAngle = (2 * Math.PI) / people.length;
+
+            // Start from top (-90 degrees) so arrow points to first slice
+            const startOffset = -Math.PI / 2;
+
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(rotationAngle * Math.PI / 180);
+            ctx.translate(-centerX, -centerY);
+
+            people.forEach((name, i) => {
+                const startAngle = startOffset + i * sliceAngle;
+                const endAngle = startOffset + (i + 1) * sliceAngle;
+
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.fillStyle = colors[i % colors.length];
+                ctx.fill();
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                // Text - draw in middle of slice
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(startAngle + sliceAngle / 2);
+                ctx.textAlign = 'right';
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 14px Inter, sans-serif';
+                ctx.shadowColor = 'rgba(0,0,0,0.5)';
+                ctx.shadowBlur = 3;
+
+                // Truncate long names
+                let displayName = name.length > 10 ? name.substring(0, 9) + '..' : name;
+                ctx.fillText(displayName, radius - 20, 5);
+                ctx.restore();
+            });
+
+            ctx.restore();
+
+            // Center circle (drawn after rotation so it stays centered)
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 25, 0, 2 * Math.PI);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+        }
+
+        // Track current wheel rotation
+        let currentRotation = 0;
+
         function spinWheel() {
-            if (isSpinning || wheelPeople.length === 0) return;
+            if (isSpinning) return;
+            if (selectedWheelPeople.length < 2) {
+                showNotification('Cần ít nhất 2 người để quay!', 'error');
+                return;
+            }
+
+            // Reset nếu là lần quay đầu tiên trong series
+            if (currentSpinRound === 0) {
+                spinResults = [];
+                document.getElementById('wheelHistory').innerHTML = '';
+            }
 
             isSpinning = true;
             document.getElementById('spinBtn').disabled = true;
-            document.getElementById('wheelResult').textContent = '';
+            document.getElementById('wheelResult').textContent = '🎰 Đang quay...';
 
-            const canvas = document.getElementById('wheelCanvas');
-            const spins = 5 + Math.random() * 5;
-            const finalAngle = spins * 360 + Math.random() * 360;
+            // Calculate spin: 5-8 full rotations + random final position
+            const extraSpins = 5 + Math.floor(Math.random() * 4);
+            const randomAngle = Math.random() * 360;
+            const targetRotation = currentRotation + (extraSpins * 360) + randomAngle;
 
-            gsap.to(canvas, {
-                rotation: finalAngle,
-                duration: 4,
-                ease: 'power4.out',
-                onComplete: () => {
-                    isSpinning = false;
-                    document.getElementById('spinBtn').disabled = false;
+            const startTime = Date.now();
+            const duration = 4000; // 4 seconds
+            const startRotation = currentRotation;
 
-                    const normalizedAngle = finalAngle % 360;
-                    const sliceAngle = 360 / wheelPeople.length;
-                    const winnerIndex = Math.floor((360 - normalizedAngle + sliceAngle / 2) / sliceAngle) % wheelPeople.length;
+            function animate() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
 
-                    document.getElementById('wheelResult').textContent = '🎉 ' + wheelPeople[winnerIndex] + ' 🎉';
+                // Ease out cubic for smooth deceleration
+                const easeProgress = 1 - Math.pow(1 - progress, 3);
+
+                currentRotation = startRotation + (targetRotation - startRotation) * easeProgress;
+                drawWheel(currentRotation);
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    onSpinComplete();
                 }
-            });
+            }
+
+            function onSpinComplete() {
+                isSpinning = false;
+
+                // Calculate winner based on final rotation
+                // Arrow points to top, wheel rotated clockwise
+                const normalizedAngle = currentRotation % 360;
+                const sliceAngle = 360 / selectedWheelPeople.length;
+
+                // The slice at top is determined by how much we rotated
+                // If rotation is 0, slice 0 is at top
+                // If rotation is sliceAngle, slice (n-1) is at top, etc.
+                const winnerIndex = Math.floor(normalizedAngle / sliceAngle) % selectedWheelPeople.length;
+                // Since we rotate clockwise, we go backwards through the array
+                const actualIndex = (selectedWheelPeople.length - winnerIndex) % selectedWheelPeople.length;
+                const winner = selectedWheelPeople[actualIndex];
+
+                currentSpinRound++;
+                spinResults.push(winner);
+
+                document.getElementById('wheelResult').innerHTML = `🎉 Lần ${currentSpinRound}: <strong style="color: #f5576c; font-size: 1.5rem;">${winner}</strong> 🎉`;
+
+                // Update history
+                const historyEl = document.getElementById('wheelHistory');
+                historyEl.innerHTML = spinResults.map((r, i) => `<span style="background:#eef2ff;padding:4px 8px;border-radius:12px;margin:2px;">Lần ${i+1}: <b>${r}</b></span>`).join(' ');
+
+                if (currentSpinRound < spinCount) {
+                    // More spins remaining
+                    document.getElementById('spinBtn').disabled = false;
+                    document.getElementById('spinBtn').innerHTML = `<i class="fas fa-sync"></i> QUAY TIẾP (${currentSpinRound}/${spinCount})`;
+                } else {
+                    // All spins complete
+                    document.getElementById('spinBtn').disabled = false;
+                    document.getElementById('spinBtn').innerHTML = '<i class="fas fa-redo"></i> QUAY LẠI';
+                    currentSpinRound = 0;
+
+                    // Show statistics if multiple spins
+                    if (spinCount > 1) {
+                        const counts = {};
+                        spinResults.forEach(r => counts[r] = (counts[r] || 0) + 1);
+                        const sortedResults = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+                        const mostFrequent = sortedResults[0];
+                        document.getElementById('wheelResult').innerHTML += `<br><span style="margin-top:8px;display:inline-block;">👑 Người được chọn nhiều nhất: <strong style="color:#48bb78;">${mostFrequent[0]}</strong> (${mostFrequent[1]} lần)</span>`;
+                    }
+                }
+            }
+
+            requestAnimationFrame(animate);
         }
 
         // ============ UTILS ============
@@ -1343,7 +2160,7 @@
         }
 
         async function logout() {
-            await fetch('/api/logout', { method: 'POST' });
+            await fetch('/api/logout', { method: 'POST', credentials: 'include' });
             window.location.href = '/login';
         }
     </script>
