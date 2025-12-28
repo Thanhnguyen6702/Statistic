@@ -7,6 +7,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 </head>
 <body>
 <div class="container">
@@ -26,6 +27,9 @@
             </button>
             <button class="btn btn-secondary" onclick="showArchiveList()">
                 <i class="fas fa-history"></i> Xem kho lưu trữ
+            </button>
+            <button class="btn btn-spin" onclick="showSpinWheel()">
+                <i class="fas fa-dharmachakra"></i> Vòng Quay
             </button>
             <button class="btn btn-logout" onclick="handleLogout()">
                 <i class="fas fa-sign-out-alt"></i> Đăng xuất
@@ -271,6 +275,74 @@
                             <button class="btn btn-secondary" onclick="expenseManager.closeActionPasswordModal()">
                                 <i class="fas fa-times"></i> Hủy
                             </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Spin Wheel Modal -->
+        <div id="spinWheelModal" class="modal">
+            <div class="modal-content spin-modal-content">
+                <div class="modal-header spin-header">
+                    <h3><i class="fas fa-dharmachakra"></i> Vòng Quay May Mắn</h3>
+                    <span class="close" onclick="closeSpinWheel()">&times;</span>
+                </div>
+                <div class="modal-body spin-modal-body">
+                    <div class="spin-container">
+                        <!-- Participants Selection -->
+                        <div class="spin-participants-section">
+                            <h4><i class="fas fa-users"></i> Chọn người tham gia</h4>
+                            <div class="spin-participants-controls">
+                                <div class="spin-add-participant">
+                                    <input type="text" id="newParticipantName" placeholder="Thêm người mới..." class="form-input">
+                                    <button class="btn btn-primary btn-small" onclick="addSpinParticipant()">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                                <div class="spin-quick-actions">
+                                    <button class="btn btn-secondary btn-small" onclick="selectAllSpinParticipants()">Chọn tất cả</button>
+                                    <button class="btn btn-secondary btn-small" onclick="deselectAllSpinParticipants()">Bỏ chọn</button>
+                                </div>
+                            </div>
+                            <div id="spinParticipantsList" class="spin-participants-list">
+                                <!-- Dynamic participants checkboxes -->
+                            </div>
+                        </div>
+
+                        <!-- Wheel Canvas -->
+                        <div class="wheel-container">
+                            <div class="wheel-pointer">
+                                <i class="fas fa-caret-down"></i>
+                            </div>
+                            <canvas id="spinCanvas" width="350" height="350"></canvas>
+                            <button id="spinButton" class="btn btn-spin-action" onclick="spinTheWheel()">
+                                <i class="fas fa-play"></i> QUAY
+                            </button>
+                        </div>
+
+                        <!-- Winner Display -->
+                        <div id="winnerDisplay" class="winner-display" style="display: none;">
+                            <div class="winner-content">
+                                <i class="fas fa-trophy"></i>
+                                <span id="winnerName"></span>
+                            </div>
+                        </div>
+
+                        <!-- Stats Section -->
+                        <div class="spin-stats-section">
+                            <div class="spin-stats-header">
+                                <h4><i class="fas fa-chart-bar"></i> Thống kê (phiên này)</h4>
+                                <button class="btn btn-danger btn-small" onclick="clearSpinStats()">
+                                    <i class="fas fa-trash"></i> Xóa
+                                </button>
+                            </div>
+                            <div class="spin-stats-info">
+                                <span>Tổng số lần quay: <strong id="totalSpinsCount">0</strong></span>
+                            </div>
+                            <div id="spinStatsTable" class="spin-stats-table">
+                                <div class="spin-stats-empty">Chưa có dữ liệu</div>
+                            </div>
                         </div>
                     </div>
                 </div>

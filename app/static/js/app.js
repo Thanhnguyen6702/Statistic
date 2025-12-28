@@ -78,6 +78,11 @@ class ExpenseManager {
             if (event.target === actionPasswordModal) {
                 this.closeActionPasswordModal();
             }
+
+            const spinWheelModal = document.getElementById('spinWheelModal');
+            if (event.target === spinWheelModal) {
+                spinWheelModal.style.display = 'none';
+            }
         };
     }
 
@@ -1148,3 +1153,446 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// ========== SPIN WHEEL FUNCTIONALITY ==========
+
+class SpinWheelManager {
+    constructor() {
+        this.participants = new Set();
+        this.selectedParticipants = new Set();
+        this.wheel = null;
+        this.isSpinning = false;
+        this.rotation = 0;
+        this.stats = this.loadStats();
+
+        // Wheel colors - beautiful gradient colors
+        this.colors = [
+            '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4',
+            '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F',
+            '#BB8FCE', '#85C1E9', '#F8B500', '#00CED1',
+            '#FF69B4', '#32CD32', '#FF8C00', '#9370DB'
+        ];
+    }
+
+    loadStats() {
+        try {
+            const saved = localStorage.getItem('spinWheelStats');
+            if (saved) {
+                const data = JSON.parse(saved);
+                return {
+                    results: data.results || {},
+                    totalSpins: data.totalSpins || 0
+                };
+            }
+        } catch (e) {
+            console.error('Error loading spin stats:', e);
+        }
+        return { results: {}, totalSpins: 0 };
+    }
+
+    saveStats() {
+        try {
+            localStorage.setItem('spinWheelStats', JSON.stringify(this.stats));
+        } catch (e) {
+            console.error('Error saving spin stats:', e);
+        }
+    }
+
+    clearStats() {
+        this.stats = { results: {}, totalSpins: 0 };
+        this.saveStats();
+        this.renderStats();
+        expenseManager.showNotification('Đã xóa thống kê vòng quay', 'success');
+    }
+
+    initParticipants() {
+        // Get members from expense manager
+        if (expenseManager && expenseManager.allMembers) {
+            expenseManager.allMembers.forEach(member => {
+                this.participants.add(member);
+            });
+        }
+        this.renderParticipants();
+    }
+
+    addParticipant(name) {
+        if (!name || name.trim() === '') return;
+
+        const normalizedName = expenseManager.normalizeName(name);
+        if (this.participants.has(normalizedName)) {
+            expenseManager.showNotification('Người này đã có trong danh sách', 'error');
+            return;
+        }
+
+        this.participants.add(normalizedName);
+        this.selectedParticipants.add(normalizedName);
+        this.renderParticipants();
+        this.drawWheel();
+
+        // Clear input
+        document.getElementById('newParticipantName').value = '';
+    }
+
+    removeParticipant(name) {
+        this.participants.delete(name);
+        this.selectedParticipants.delete(name);
+        this.renderParticipants();
+        this.drawWheel();
+    }
+
+    toggleParticipant(name) {
+        if (this.selectedParticipants.has(name)) {
+            this.selectedParticipants.delete(name);
+        } else {
+            this.selectedParticipants.add(name);
+        }
+        this.renderParticipants();
+        this.drawWheel();
+    }
+
+    selectAll() {
+        this.participants.forEach(p => this.selectedParticipants.add(p));
+        this.renderParticipants();
+        this.drawWheel();
+    }
+
+    deselectAll() {
+        this.selectedParticipants.clear();
+        this.renderParticipants();
+        this.drawWheel();
+    }
+
+    renderParticipants() {
+        const container = document.getElementById('spinParticipantsList');
+        if (!container) return;
+
+        container.innerHTML = '';
+        const sorted = Array.from(this.participants).sort();
+
+        sorted.forEach(name => {
+            const isSelected = this.selectedParticipants.has(name);
+            const item = document.createElement('div');
+            item.className = `spin-participant-item ${isSelected ? 'selected' : ''}`;
+            item.onclick = (e) => {
+                if (!e.target.classList.contains('remove-btn') && !e.target.closest('.remove-btn')) {
+                    this.toggleParticipant(name);
+                }
+            };
+
+            item.innerHTML = `
+                <input type="checkbox" ${isSelected ? 'checked' : ''}>
+                <span class="checkmark">
+                    ${isSelected ? '<i class="fas fa-check"></i>' : ''}
+                </span>
+                <span class="name">${name}</span>
+                <button class="remove-btn" onclick="event.stopPropagation(); spinWheelManager.removeParticipant('${name}')">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+
+            container.appendChild(item);
+        });
+    }
+
+    drawWheel() {
+        const canvas = document.getElementById('spinCanvas');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const radius = Math.min(centerX, centerY) - 10;
+
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const selected = Array.from(this.selectedParticipants);
+
+        if (selected.length === 0) {
+            // Draw empty wheel
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+            ctx.fillStyle = '#e2e8f0';
+            ctx.fill();
+            ctx.strokeStyle = '#cbd5e0';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Draw text
+            ctx.fillStyle = '#718096';
+            ctx.font = 'bold 16px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('Chọn người tham gia', centerX, centerY);
+            return;
+        }
+
+        const sliceAngle = (2 * Math.PI) / selected.length;
+
+        // Save context state
+        ctx.save();
+
+        // Apply rotation
+        ctx.translate(centerX, centerY);
+        ctx.rotate(this.rotation * Math.PI / 180);
+        ctx.translate(-centerX, -centerY);
+
+        // Draw slices
+        selected.forEach((name, index) => {
+            const startAngle = index * sliceAngle - Math.PI / 2;
+            const endAngle = startAngle + sliceAngle;
+
+            // Draw slice
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+            ctx.closePath();
+
+            // Fill with color
+            ctx.fillStyle = this.colors[index % this.colors.length];
+            ctx.fill();
+
+            // Stroke
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Draw text
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(startAngle + sliceAngle / 2);
+
+            const textRadius = radius * 0.65;
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 14px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.shadowColor = 'rgba(0,0,0,0.3)';
+            ctx.shadowBlur = 3;
+
+            // Truncate name if too long
+            let displayName = name;
+            if (displayName.length > 10) {
+                displayName = displayName.substring(0, 8) + '..';
+            }
+
+            ctx.fillText(displayName, textRadius, 0);
+            ctx.restore();
+        });
+
+        // Restore context
+        ctx.restore();
+
+        // Draw center circle
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 25, 0, 2 * Math.PI);
+        ctx.fillStyle = 'white';
+        ctx.fill();
+        ctx.strokeStyle = '#667eea';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // Draw outer ring
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+        ctx.strokeStyle = '#667eea';
+        ctx.lineWidth = 5;
+        ctx.stroke();
+    }
+
+    spin() {
+        const selected = Array.from(this.selectedParticipants);
+
+        if (selected.length < 2) {
+            expenseManager.showNotification('Cần ít nhất 2 người để quay', 'error');
+            return;
+        }
+
+        if (this.isSpinning) return;
+
+        this.isSpinning = true;
+
+        // Hide previous winner
+        document.getElementById('winnerDisplay').style.display = 'none';
+
+        // Disable button
+        const spinBtn = document.getElementById('spinButton');
+        spinBtn.disabled = true;
+        spinBtn.classList.add('spinning');
+        spinBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang quay...';
+
+        // Calculate random winner
+        const winnerIndex = Math.floor(Math.random() * selected.length);
+        const winner = selected[winnerIndex];
+
+        // Calculate final rotation
+        const sliceAngle = 360 / selected.length;
+        // Target rotation: point to winner (at top, which is -90 degrees or 270 degrees)
+        // Winner should be at the top when wheel stops
+        const targetAngle = 360 - (winnerIndex * sliceAngle) - (sliceAngle / 2);
+        const extraSpins = 5 + Math.floor(Math.random() * 3); // 5-7 full rotations
+        const finalRotation = this.rotation + (extraSpins * 360) + targetAngle - (this.rotation % 360);
+
+        // Animate with GSAP if available, otherwise use requestAnimationFrame
+        if (typeof gsap !== 'undefined') {
+            gsap.to(this, {
+                rotation: finalRotation,
+                duration: 4 + Math.random(),
+                ease: "power4.out",
+                onUpdate: () => this.drawWheel(),
+                onComplete: () => this.onSpinComplete(winner)
+            });
+        } else {
+            // Fallback animation
+            this.animateSpin(finalRotation, winner);
+        }
+    }
+
+    animateSpin(targetRotation, winner) {
+        const startRotation = this.rotation;
+        const rotationDiff = targetRotation - startRotation;
+        const duration = 4000 + Math.random() * 1000;
+        const startTime = Date.now();
+
+        const animate = () => {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            // Ease out quart
+            const easeProgress = 1 - Math.pow(1 - progress, 4);
+
+            this.rotation = startRotation + (rotationDiff * easeProgress);
+            this.drawWheel();
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                this.onSpinComplete(winner);
+            }
+        };
+
+        requestAnimationFrame(animate);
+    }
+
+    onSpinComplete(winner) {
+        this.isSpinning = false;
+
+        // Update stats
+        this.stats.totalSpins++;
+        this.stats.results[winner] = (this.stats.results[winner] || 0) + 1;
+        this.saveStats();
+
+        // Show winner
+        document.getElementById('winnerName').textContent = winner;
+        document.getElementById('winnerDisplay').style.display = 'block';
+
+        // Re-enable button
+        const spinBtn = document.getElementById('spinButton');
+        spinBtn.disabled = false;
+        spinBtn.classList.remove('spinning');
+        spinBtn.innerHTML = '<i class="fas fa-play"></i> QUAY';
+
+        // Update stats display
+        this.renderStats();
+
+        // Show notification
+        expenseManager.showNotification(`Người trúng: ${winner}!`, 'success');
+    }
+
+    renderStats() {
+        const container = document.getElementById('spinStatsTable');
+        const totalSpan = document.getElementById('totalSpinsCount');
+
+        if (!container) return;
+
+        totalSpan.textContent = this.stats.totalSpins;
+
+        const results = this.stats.results;
+        const entries = Object.entries(results).sort((a, b) => b[1] - a[1]);
+
+        if (entries.length === 0) {
+            container.innerHTML = '<div class="spin-stats-empty">Chưa có dữ liệu</div>';
+            return;
+        }
+
+        container.innerHTML = entries.map(([name, count], index) => {
+            const percent = this.stats.totalSpins > 0
+                ? ((count / this.stats.totalSpins) * 100).toFixed(1)
+                : 0;
+
+            let rankClass = '';
+            let rankSymbol = index + 1;
+
+            if (index === 0) {
+                rankClass = 'first';
+                rankSymbol = '🥇';
+            } else if (index === 1) {
+                rankClass = 'second';
+                rankSymbol = '🥈';
+            } else if (index === 2) {
+                rankClass = 'third';
+                rankSymbol = '🥉';
+            }
+
+            return `
+                <div class="spin-stat-row ${rankClass}">
+                    <span class="spin-stat-rank">${rankSymbol}</span>
+                    <span class="spin-stat-name">${name}</span>
+                    <span class="spin-stat-count">${count} lần</span>
+                    <span class="spin-stat-percent">${percent}%</span>
+                </div>
+            `;
+        }).join('');
+    }
+}
+
+// Create spin wheel manager instance
+const spinWheelManager = new SpinWheelManager();
+
+// Spin wheel functions
+function showSpinWheel() {
+    spinWheelManager.initParticipants();
+    spinWheelManager.drawWheel();
+    spinWheelManager.renderStats();
+    document.getElementById('spinWheelModal').style.display = 'block';
+}
+
+function closeSpinWheel() {
+    document.getElementById('spinWheelModal').style.display = 'none';
+}
+
+function addSpinParticipant() {
+    const input = document.getElementById('newParticipantName');
+    spinWheelManager.addParticipant(input.value);
+}
+
+function selectAllSpinParticipants() {
+    spinWheelManager.selectAll();
+}
+
+function deselectAllSpinParticipants() {
+    spinWheelManager.deselectAll();
+}
+
+function spinTheWheel() {
+    spinWheelManager.spin();
+}
+
+function clearSpinStats() {
+    if (confirm('Bạn có chắc chắn muốn xóa thống kê?')) {
+        spinWheelManager.clearStats();
+    }
+}
+
+// Handle enter key on participant input
+document.addEventListener('DOMContentLoaded', () => {
+    const input = document.getElementById('newParticipantName');
+    if (input) {
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addSpinParticipant();
+            }
+        });
+    }
+});

@@ -1227,3 +1227,451 @@ body {
     transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(197, 48, 48, 0.4);
 }
+
+/* ========== SPIN WHEEL STYLES ========== */
+
+/* Spin Button in Header */
+.btn-spin {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    border: none;
+    animation: pulse-glow 2s infinite;
+}
+
+.btn-spin:hover {
+    background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(240, 147, 251, 0.4);
+}
+
+@keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 4px 15px rgba(240, 147, 251, 0.3); }
+    50% { box-shadow: 0 4px 25px rgba(240, 147, 251, 0.6); }
+}
+
+/* Spin Modal Styles */
+.spin-modal-content {
+    max-width: 900px;
+    width: 95%;
+}
+
+.spin-header {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.spin-modal-body {
+    padding: 24px;
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 20%, #f8f9fa 100%);
+}
+
+.spin-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+}
+
+/* Participants Section */
+.spin-participants-section {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.spin-participants-section h4 {
+    color: #2d3748;
+    margin-bottom: 16px;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.spin-participants-section h4 i {
+    color: #f093fb;
+}
+
+.spin-participants-controls {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.spin-add-participant {
+    display: flex;
+    gap: 8px;
+    flex: 1;
+    min-width: 200px;
+}
+
+.spin-add-participant input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+}
+
+.spin-add-participant input:focus {
+    outline: none;
+    border-color: #f093fb;
+    box-shadow: 0 0 0 3px rgba(240, 147, 251, 0.1);
+}
+
+.spin-quick-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.spin-participants-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 4px;
+}
+
+.spin-participant-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.spin-participant-item:hover {
+    border-color: #f093fb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(240, 147, 251, 0.15);
+}
+
+.spin-participant-item.selected {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    border-color: transparent;
+    color: white;
+}
+
+.spin-participant-item input[type="checkbox"] {
+    display: none;
+}
+
+.spin-participant-item .checkmark {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #cbd5e0;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.spin-participant-item.selected .checkmark {
+    background: white;
+    border-color: white;
+    color: #f5576c;
+}
+
+.spin-participant-item .name {
+    font-weight: 500;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.spin-participant-item .remove-btn {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: #a0aec0;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    opacity: 0;
+}
+
+.spin-participant-item:hover .remove-btn {
+    opacity: 1;
+}
+
+.spin-participant-item .remove-btn:hover {
+    color: #e53e3e;
+    background: rgba(229, 62, 62, 0.1);
+}
+
+/* Wheel Container */
+.wheel-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 20px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+.wheel-pointer {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    font-size: 3rem;
+    color: #f5576c;
+    filter: drop-shadow(0 4px 8px rgba(245, 87, 108, 0.4));
+    animation: bounce-pointer 1s ease-in-out infinite;
+}
+
+@keyframes bounce-pointer {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(5px); }
+}
+
+#spinCanvas {
+    margin: 20px 0;
+    filter: drop-shadow(0 8px 25px rgba(0, 0, 0, 0.15));
+}
+
+.btn-spin-action {
+    margin-top: 20px;
+    padding: 16px 50px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-spin-action:hover:not(:disabled) {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+}
+
+.btn-spin-action:disabled {
+    background: #a0aec0;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.btn-spin-action.spinning {
+    animation: spin-button-pulse 0.5s ease-in-out infinite;
+}
+
+@keyframes spin-button-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(0.95); }
+}
+
+/* Winner Display */
+.winner-display {
+    margin-top: 20px;
+    padding: 20px 30px;
+    background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+    border-radius: 16px;
+    text-align: center;
+    animation: winner-appear 0.5s ease-out;
+    box-shadow: 0 8px 30px rgba(253, 203, 110, 0.4);
+}
+
+@keyframes winner-appear {
+    0% { transform: scale(0); opacity: 0; }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.winner-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.winner-content i {
+    font-size: 2rem;
+    color: #d35400;
+    animation: trophy-bounce 0.6s ease-in-out infinite;
+}
+
+@keyframes trophy-bounce {
+    0%, 100% { transform: rotate(-10deg); }
+    50% { transform: rotate(10deg); }
+}
+
+.winner-content span {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2d3748;
+}
+
+/* Stats Section */
+.spin-stats-section {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.spin-stats-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.spin-stats-header h4 {
+    color: #2d3748;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+}
+
+.spin-stats-header h4 i {
+    color: #667eea;
+}
+
+.spin-stats-info {
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+    color: white;
+    font-size: 0.95rem;
+}
+
+.spin-stats-info strong {
+    font-size: 1.2rem;
+}
+
+.spin-stats-table {
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.spin-stats-empty {
+    text-align: center;
+    color: #a0aec0;
+    padding: 30px;
+    font-style: italic;
+}
+
+.spin-stat-row {
+    display: grid;
+    grid-template-columns: 40px 1fr 80px 80px;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 16px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    transition: all 0.2s;
+}
+
+.spin-stat-row:hover {
+    background: #edf2f7;
+    transform: translateX(4px);
+}
+
+.spin-stat-row.first {
+    background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+}
+
+.spin-stat-row.second {
+    background: linear-gradient(135deg, #dfe6e9 0%, #b2bec3 100%);
+}
+
+.spin-stat-row.third {
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+}
+
+.spin-stat-rank {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #2d3748;
+    text-align: center;
+}
+
+.spin-stat-row.first .spin-stat-rank { color: #d35400; }
+.spin-stat-row.second .spin-stat-rank { color: #636e72; }
+.spin-stat-row.third .spin-stat-rank { color: #e17055; }
+
+.spin-stat-name {
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.spin-stat-count {
+    text-align: center;
+    font-weight: 600;
+    color: #667eea;
+}
+
+.spin-stat-percent {
+    text-align: right;
+    font-weight: 500;
+    color: #718096;
+}
+
+/* Responsive */
+@media (min-width: 768px) {
+    .spin-container {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .wheel-container {
+        grid-row: span 2;
+    }
+
+    .spin-stats-section {
+        grid-column: 1;
+    }
+}
+
+@media (max-width: 767px) {
+    .spin-modal-content {
+        margin: 2% auto;
+        max-height: 95vh;
+    }
+
+    .spin-modal-body {
+        padding: 16px;
+    }
+
+    #spinCanvas {
+        width: 280px;
+        height: 280px;
+    }
+
+    .wheel-pointer {
+        font-size: 2.5rem;
+    }
+
+    .btn-spin-action {
+        padding: 14px 40px;
+        font-size: 1.1rem;
+    }
+
+    .spin-participants-controls {
+        flex-direction: column;
+    }
+
+    .spin-add-participant {
+        min-width: 100%;
+    }
+}
