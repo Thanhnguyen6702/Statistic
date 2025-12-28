@@ -34,8 +34,9 @@ def create_app(config_name=None):
     db.init_app(app)
     socketio.init_app(app, async_mode='gevent')
 
-    # Import socket events AFTER socketio.init_app
-    from app.sockets import game_events  # noqa: F401
+    # Initialize socket handlers AFTER socketio.init_app
+    from app.sockets import init_sockets
+    init_sockets()
 
     # Register blueprints
     register_blueprints(app)

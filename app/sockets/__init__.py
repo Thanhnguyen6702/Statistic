@@ -2,10 +2,10 @@
 WebSocket handlers package.
 """
 
-from app.sockets import game_events
 
-
-def init_sockets(socketio):
+def init_sockets():
     """Initialize all socket event handlers."""
-    # Events are registered via decorators in game_events
-    pass
+    import importlib
+    from app.sockets import game_events
+    # Reload to re-run decorators after socketio.init_app()
+    importlib.reload(game_events)
