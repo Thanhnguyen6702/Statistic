@@ -13,15 +13,10 @@ from flask_socketio import emit, join_room, leave_room
 from app.extensions import socketio
 from app.services import UserService
 
-# Debug: confirm module is loaded
-print(">>> GAME_EVENTS MODULE LOADED <<<", file=sys.stderr, flush=True)
-
 
 def log(msg):
-    """Force flush log to stdout."""
-    import sys
+    """Log to stderr for visibility."""
     print(f"[Socket] {msg}", file=sys.stderr, flush=True)
-    sys.stderr.flush()
 
 
 # ============ IN-MEMORY GAME STATE ============
@@ -200,8 +195,6 @@ def broadcast_lobby_users():
 @socketio.on('join_lobby')
 def handle_join_lobby(data=None):
     """User joins the game lobby to see online players."""
-    import sys
-    print(f">>> JOIN_LOBBY CALLED with data: {data}", file=sys.stderr, flush=True)
     try:
         sid = request.sid
         user_id = get_user_id(data)
@@ -247,8 +240,6 @@ def handle_join_lobby(data=None):
 @socketio.on('create_room')
 def handle_create_room(data):
     """Create a new game room in memory."""
-    import sys
-    print(f">>> CREATE_ROOM CALLED with data: {data}", file=sys.stderr, flush=True)
     try:
         user_id = get_user_id(data)
 

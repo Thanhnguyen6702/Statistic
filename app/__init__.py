@@ -35,12 +35,7 @@ def create_app(config_name=None):
     socketio.init_app(app, async_mode='gevent')
 
     # Import socket events AFTER socketio.init_app
-    # This ensures decorators register to the initialized socketio
-    with app.app_context():
-        from app.sockets import game_events
-        # Force re-registration by touching the module
-        import importlib
-        importlib.reload(game_events)
+    from app.sockets import game_events  # noqa: F401
 
     # Register blueprints
     register_blueprints(app)

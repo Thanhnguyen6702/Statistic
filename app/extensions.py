@@ -11,6 +11,6 @@ socketio = SocketIO(
     cors_allowed_origins="*",
     ping_timeout=60,
     ping_interval=25,
-    logger=True,
-    engineio_logger=True
+    logger=False,
+    engineio_logger=False
 )
