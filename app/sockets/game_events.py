@@ -40,6 +40,10 @@ socket_to_user = {}  # {sid: user_id}
 pending_invites = {}  # {invite_id: {...}}
 INVITE_TIMEOUT = 60
 
+# Pending disconnects (for grace period)
+pending_disconnects = {}  # {user_id: {'timer': gevent_timer, 'rooms': [...]}}
+DISCONNECT_GRACE_PERIOD = 5  # seconds
+
 # Constants
 VALID_CHOICES = {'rock', 'paper', 'scissors'}
 CHOICE_BEATS = {'rock': 'scissors', 'paper': 'rock', 'scissors': 'paper'}
@@ -143,6 +147,15 @@ def handle_connect():
     if user_id:
         # Store mapping immediately if we have session
         socket_to_user[sid] = user_id
+
+        # Cancel any pending disconnect for this user
+        if user_id in pending_disconnects:
+            old_timer = pending_disconnects[user_id].get('timer')
+            if old_timer:
+                old_timer.kill()
+            del pending_disconnects[user_id]
+            log(f"Cancelled pending disconnect for user {user_id}")
+
         emit('connected', {'user_id': user_id, 'sid': sid})
     else:
         # Still allow connection - client will send user_id in join_lobby
@@ -157,7 +170,9 @@ def handle_ping():
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    """Handle WebSocket disconnection."""
+    """Handle WebSocket disconnection with grace period."""
+    import gevent
+
     sid = request.sid
     user_id = socket_to_user.get(sid)
 
@@ -165,19 +180,50 @@ def handle_disconnect():
     if sid in socket_to_user:
         del socket_to_user[sid]
 
-    if user_id:
+    if not user_id:
+        return
+
+    log(f"disconnect - user_id: {user_id}, starting grace period")
+
+    # Cancel any existing pending disconnect for this user
+    if user_id in pending_disconnects:
+        old_timer = pending_disconnects[user_id].get('timer')
+        if old_timer:
+            old_timer.kill()
+        del pending_disconnects[user_id]
+
+    # Collect rooms user is in
+    user_rooms = []
+    for room_code, users in room_users.items():
+        if user_id in users:
+            user_rooms.append(room_code)
+
+    # Schedule cleanup after grace period
+    def do_cleanup():
+        log(f"Grace period expired for user {user_id}, cleaning up")
+
+        # Remove from pending
+        if user_id in pending_disconnects:
+            del pending_disconnects[user_id]
+
+        # Check if user has reconnected (would have new sid in socket_to_user values)
+        if user_id in socket_to_user.values():
+            log(f"User {user_id} reconnected, skipping cleanup")
+            return
+
         # Clean up room_users
-        for room_code, users in list(room_users.items()):
-            if user_id in users:
-                del users[user_id]
-                # Notify others in room
-                emit('player_disconnected', {'user_id': user_id}, room=room_code)
+        for room_code in user_rooms:
+            if room_code in room_users and user_id in room_users[room_code]:
+                del room_users[room_code][user_id]
+                socketio.emit('player_disconnected', {'user_id': user_id}, room=room_code)
 
         # Clean up lobby_users
         if user_id in lobby_users:
             del lobby_users[user_id]
-            # Broadcast updated online list to lobby
             broadcast_lobby_users()
+
+    timer = gevent.spawn_later(DISCONNECT_GRACE_PERIOD, do_cleanup)
+    pending_disconnects[user_id] = {'timer': timer, 'rooms': user_rooms}
 
 
 def broadcast_lobby_users():
@@ -199,7 +245,7 @@ def handle_join_lobby(data=None):
         sid = request.sid
         user_id = get_user_id(data)
 
-        log(f"join_lobby - user_id: {user_id}, sid: {sid}, data: {data}")
+        log(f"join_lobby - user_id: {user_id}, sid: {sid}")
 
         if not user_id:
             log(f"join_lobby - NO USER ID!")
@@ -213,6 +259,14 @@ def handle_join_lobby(data=None):
 
         # Store mapping for future requests
         socket_to_user[sid] = user_id
+
+        # Cancel any pending disconnect
+        if user_id in pending_disconnects:
+            old_timer = pending_disconnects[user_id].get('timer')
+            if old_timer:
+                old_timer.kill()
+            del pending_disconnects[user_id]
+            log(f"Cancelled pending disconnect for user {user_id}")
 
         # Join lobby room
         join_room('game_lobby')
@@ -499,9 +553,22 @@ def handle_join_room(data):
     room_code = data.get('room_code', '').upper() if data else ''
     user_id = get_user_id(data)
 
+    log(f"join_game_room - user_id: {user_id}, room: {room_code}")
+
     if not user_id or not room_code:
         emit('error', {'message': 'Invalid request'})
         return
+
+    # Store mapping for this socket
+    socket_to_user[request.sid] = user_id
+
+    # Cancel any pending disconnect
+    if user_id in pending_disconnects:
+        old_timer = pending_disconnects[user_id].get('timer')
+        if old_timer:
+            old_timer.kill()
+        del pending_disconnects[user_id]
+        log(f"Cancelled pending disconnect for user {user_id}")
 
     game = get_game_state(room_code)
     if not game:

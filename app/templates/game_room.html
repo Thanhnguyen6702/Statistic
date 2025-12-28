@@ -473,14 +473,20 @@
                 reconnectAttempts = 0;
                 updateConnectionIndicator(true);
 
-                // Join room - this will trigger player_joined with room data
-                socket.emit('join_game_room', { room_code: ROOM_CODE });
+                // Join room with user_id for authentication
+                socket.emit('join_game_room', {
+                    room_code: ROOM_CODE,
+                    user_id: currentUser ? currentUser.id : null
+                });
 
                 // Start heartbeat
                 startHeartbeat();
 
-                // Always request room state to get latest
-                socket.emit('get_room_state', { room_code: ROOM_CODE });
+                // Request room state with user_id
+                socket.emit('get_room_state', {
+                    room_code: ROOM_CODE,
+                    user_id: currentUser ? currentUser.id : null
+                });
             });
 
             socket.on('disconnect', (reason) => {
@@ -679,10 +685,11 @@
             myStatusEl.textContent = 'Đã chọn!';
             myStatusEl.style.color = '#48bb78';
 
-            // Send to server with acknowledgement
+            // Send to server with user_id for authentication
             socket.emit('make_choice', {
                 room_code: ROOM_CODE,
-                choice: choice
+                choice: choice,
+                user_id: currentUser ? currentUser.id : null
             });
         }
 
@@ -773,7 +780,10 @@
         }
 
         function requestRematch() {
-            socket.emit('request_rematch', { room_code: ROOM_CODE });
+            socket.emit('request_rematch', {
+                room_code: ROOM_CODE,
+                user_id: currentUser ? currentUser.id : null
+            });
         }
 
         function goToLobby() {
@@ -811,7 +821,10 @@
         window.addEventListener('beforeunload', () => {
             stopHeartbeat();
             if (socket) {
-                socket.emit('leave_game_room', { room_code: ROOM_CODE });
+                socket.emit('leave_game_room', {
+                    room_code: ROOM_CODE,
+                    user_id: currentUser ? currentUser.id : null
+                });
                 socket.disconnect();
             }
         });
