@@ -7,10 +7,21 @@ Game state is stored in memory - only save to DB when match ends.
 import time
 import random
 import string
+import sys
 from flask import session, request
 from flask_socketio import emit, join_room, leave_room
 from app.extensions import socketio
 from app.services import UserService
+
+# Debug: confirm module is loaded
+print(">>> GAME_EVENTS MODULE LOADED <<<", file=sys.stderr, flush=True)
+
+
+def log(msg):
+    """Force flush log to stdout."""
+    import sys
+    print(f"[Socket] {msg}", file=sys.stderr, flush=True)
+    sys.stderr.flush()
 
 
 # ============ IN-MEMORY GAME STATE ============
@@ -27,6 +38,9 @@ room_users = {}  # {room_code: {user_id: sid}}
 # Store online users in lobby
 lobby_users = {}  # {user_id: {username, avatar_url, sid}}
 
+# Map socket ID to user ID (for authentication)
+socket_to_user = {}  # {sid: user_id}
+
 # Store pending invites
 pending_invites = {}  # {invite_id: {...}}
 INVITE_TIMEOUT = 60
@@ -34,6 +48,29 @@ INVITE_TIMEOUT = 60
 # Constants
 VALID_CHOICES = {'rock', 'paper', 'scissors'}
 CHOICE_BEATS = {'rock': 'scissors', 'paper': 'rock', 'scissors': 'paper'}
+
+
+def get_user_id(data=None):
+    """Get user_id from socket mapping, session, or data parameter."""
+    sid = request.sid
+
+    # First try socket-to-user mapping (most reliable)
+    if sid in socket_to_user:
+        return socket_to_user[sid]
+
+    # Try Flask session
+    user_id = session.get('user_id')
+    if user_id:
+        socket_to_user[sid] = user_id
+        return user_id
+
+    # Try data parameter (client sends user_id)
+    if data and isinstance(data, dict) and data.get('user_id'):
+        user_id = data.get('user_id')
+        socket_to_user[sid] = user_id
+        return user_id
+
+    return None
 
 
 def generate_room_code():
@@ -103,14 +140,18 @@ def game_to_dict(room_code):
 @socketio.on('connect')
 def handle_connect():
     """Handle new WebSocket connection."""
+    sid = request.sid
     user_id = session.get('user_id')
-    print(f"[Socket] Connect attempt - user_id: {user_id}, sid: {request.sid}")
+
+    log(f"Connect - user_id: {user_id}, sid: {sid}")
 
     if user_id:
-        emit('connected', {'user_id': user_id, 'sid': request.sid})
+        # Store mapping immediately if we have session
+        socket_to_user[sid] = user_id
+        emit('connected', {'user_id': user_id, 'sid': sid})
     else:
-        # Still allow connection but notify client
-        emit('connected', {'user_id': None, 'sid': request.sid, 'error': 'Not authenticated'})
+        # Still allow connection - client will send user_id in join_lobby
+        emit('connected', {'user_id': None, 'sid': sid, 'message': 'Send user_id in join_lobby'})
 
 
 @socketio.on('ping')
@@ -122,7 +163,13 @@ def handle_ping():
 @socketio.on('disconnect')
 def handle_disconnect():
     """Handle WebSocket disconnection."""
-    user_id = session.get('user_id')
+    sid = request.sid
+    user_id = socket_to_user.get(sid)
+
+    # Clean up socket mapping
+    if sid in socket_to_user:
+        del socket_to_user[sid]
+
     if user_id:
         # Clean up room_users
         for room_code, users in list(room_users.items()):
@@ -151,92 +198,113 @@ def broadcast_lobby_users():
 
 
 @socketio.on('join_lobby')
-def handle_join_lobby():
+def handle_join_lobby(data=None):
     """User joins the game lobby to see online players."""
-    user_id = session.get('user_id')
-    sid = request.sid
+    import sys
+    print(f">>> JOIN_LOBBY CALLED with data: {data}", file=sys.stderr, flush=True)
+    try:
+        sid = request.sid
+        user_id = get_user_id(data)
 
-    print(f"[Socket] join_lobby - user_id: {user_id}, sid: {sid}")
+        log(f"join_lobby - user_id: {user_id}, sid: {sid}, data: {data}")
 
-    if not user_id:
-        emit('error', {'message': 'Chưa đăng nhập'})
-        return
+        if not user_id:
+            log(f"join_lobby - NO USER ID!")
+            emit('error', {'message': 'Chưa đăng nhập'})
+            return
 
-    user = UserService.get_by_id(user_id)
-    if not user:
-        emit('error', {'message': 'User not found'})
-        return
+        user = UserService.get_by_id(user_id)
+        if not user:
+            emit('error', {'message': 'User not found'})
+            return
 
-    # Join lobby room
-    join_room('game_lobby')
+        # Store mapping for future requests
+        socket_to_user[sid] = user_id
 
-    # Add to lobby users with sid for tracking
-    lobby_users[user_id] = {
-        'username': user.username,
-        'avatar_url': user.avatar_url,
-        'sid': sid
-    }
+        # Join lobby room
+        join_room('game_lobby')
 
-    print(f"[Socket] User {user.username} joined lobby. Total online: {len(lobby_users)}")
+        # Add to lobby users with sid for tracking
+        lobby_users[user_id] = {
+            'username': user.username,
+            'avatar_url': user.avatar_url,
+            'sid': sid
+        }
 
-    # Send confirmation first
-    emit('joined_lobby', {'user_id': user_id, 'username': user.username})
+        log(f"User {user.username} joined lobby. Total online: {len(lobby_users)}")
 
-    # Then broadcast updated list to everyone
-    broadcast_lobby_users()
+        # Send confirmation first
+        emit('joined_lobby', {'user_id': user_id, 'username': user.username})
+
+        # Then broadcast updated list to everyone
+        broadcast_lobby_users()
+    except Exception as e:
+        log(f"join_lobby ERROR: {e}")
+        import traceback
+        traceback.print_exc()
 
 
 @socketio.on('create_room')
 def handle_create_room(data):
     """Create a new game room in memory."""
-    user_id = session.get('user_id')
-    print(f"[Socket] create_room - user_id: {user_id}")
+    import sys
+    print(f">>> CREATE_ROOM CALLED with data: {data}", file=sys.stderr, flush=True)
+    try:
+        user_id = get_user_id(data)
 
-    if not user_id:
-        emit('error', {'message': 'Chưa đăng nhập'})
-        return
+        log(f"create_room - user_id: {user_id}, data: {data}")
 
-    user = UserService.get_by_id(user_id)
-    if not user:
-        emit('error', {'message': 'User not found'})
-        return
+        if not user_id:
+            log(f"create_room - NO USER ID!")
+            emit('error', {'message': 'Chưa đăng nhập'})
+            return
 
-    best_of = data.get('best_of', 3)
-    if best_of not in [1, 3, 5]:
-        best_of = 3
+        user = UserService.get_by_id(user_id)
+        if not user:
+            emit('error', {'message': 'User not found'})
+            return
 
-    # Cleanup old games periodically
-    cleanup_old_games()
+        best_of = data.get('best_of', 3) if data else 3
+        if best_of not in [1, 3, 5]:
+            best_of = 3
 
-    # Generate unique room code
-    room_code = generate_room_code()
-    while room_code in active_games:
+        # Cleanup old games periodically
+        cleanup_old_games()
+
+        # Generate unique room code
         room_code = generate_room_code()
+        while room_code in active_games:
+            room_code = generate_room_code()
 
-    # Create game in memory
-    create_game(room_code, user_id, user.username, best_of)
+        # Create game in memory
+        create_game(room_code, user_id, user.username, best_of)
 
-    # Auto-join host to socket room
-    join_room(room_code)
-    if room_code not in room_users:
-        room_users[room_code] = {}
-    room_users[room_code][user_id] = request.sid
+        # Auto-join host to socket room
+        join_room(room_code)
+        if room_code not in room_users:
+            room_users[room_code] = {}
+        room_users[room_code][user_id] = request.sid
 
-    print(f"[Socket] Room created: {room_code} by user {user_id}")
+        log(f"Room created: {room_code} by user {user_id}")
 
-    emit('room_created', {
-        'room_code': room_code,
-        'room': game_to_dict(room_code)
-    })
+        emit('room_created', {
+            'room_code': room_code,
+            'room': game_to_dict(room_code)
+        })
+    except Exception as e:
+        log(f"create_room ERROR: {e}")
+        import traceback
+        traceback.print_exc()
+        emit('error', {'message': 'Lỗi tạo phòng'})
 
 
 @socketio.on('join_room_by_code')
 def handle_join_room_by_code(data):
     """Join a room using room code."""
-    user_id = session.get('user_id')
-    room_code = data.get('room_code', '').upper().strip()
+    user_id = get_user_id(data)
+    room_code = data.get('room_code', '').upper().strip() if data else ''
 
-    print(f"[Socket] join_room_by_code - user_id: {user_id}, room: {room_code}")
+    log(f"join_room_by_code - user_id: {user_id}, room: {room_code}")
 
     if not user_id:
         emit('error', {'message': 'Chưa đăng nhập'})
@@ -287,7 +355,7 @@ def handle_join_room_by_code(data):
         'room': game_to_dict(room_code)
     }, room=room_code)
 
-    print(f"[Socket] User {user_id} joined room {room_code}")
+    log(f"User {user_id} joined room {room_code}")
 
     emit('room_joined', {
         'room_code': room_code,
@@ -298,7 +366,7 @@ def handle_join_room_by_code(data):
 @socketio.on('leave_lobby')
 def handle_leave_lobby():
     """User leaves the game lobby."""
-    user_id = session.get('user_id')
+    user_id = get_user_id()
     if user_id:
         leave_room('game_lobby')
         if user_id in lobby_users:
@@ -310,11 +378,10 @@ def handle_leave_lobby():
 def handle_invite_player(data):
     """Send game invite to another player."""
     import uuid
-    import time
 
-    from_user_id = session.get('user_id')
-    to_user_id = data.get('to_user_id')
-    best_of = data.get('best_of', 3)
+    from_user_id = get_user_id(data)
+    to_user_id = data.get('to_user_id') if data else None
+    best_of = data.get('best_of', 3) if data else 3
 
     if not from_user_id or not to_user_id:
         emit('error', {'message': 'Invalid request'})
@@ -362,8 +429,8 @@ def handle_invite_player(data):
 @socketio.on('accept_invite')
 def handle_accept_invite(data):
     """Accept a game invite and create room IN MEMORY."""
-    invite_id = data.get('invite_id')
-    user_id = session.get('user_id')
+    invite_id = data.get('invite_id') if data else None
+    user_id = get_user_id(data)
 
     if not invite_id or invite_id not in pending_invites:
         emit('error', {'message': 'Invalid invite'})
@@ -408,8 +475,8 @@ def handle_accept_invite(data):
 @socketio.on('decline_invite')
 def handle_decline_invite(data):
     """Decline a game invite."""
-    invite_id = data.get('invite_id')
-    user_id = session.get('user_id')
+    invite_id = data.get('invite_id') if data else None
+    user_id = get_user_id(data)
 
     if not invite_id or invite_id not in pending_invites:
         return
@@ -438,8 +505,8 @@ def handle_decline_invite(data):
 @socketio.on('join_game_room')
 def handle_join_room(data):
     """Join a game room WebSocket channel - ALL IN MEMORY."""
-    room_code = data.get('room_code', '').upper()
-    user_id = session.get('user_id')
+    room_code = data.get('room_code', '').upper() if data else ''
+    user_id = get_user_id(data)
 
     if not user_id or not room_code:
         emit('error', {'message': 'Invalid request'})
@@ -476,8 +543,8 @@ def handle_join_room(data):
 @socketio.on('leave_game_room')
 def handle_leave_room(data):
     """Leave a game room - forfeit if playing."""
-    room_code = data.get('room_code', '').upper()
-    user_id = session.get('user_id')
+    room_code = data.get('room_code', '').upper() if data else ''
+    user_id = get_user_id(data)
 
     if not room_code or not user_id:
         return
@@ -500,9 +567,9 @@ def handle_leave_room(data):
 @socketio.on('make_choice')
 def handle_make_choice(data):
     """Handle player choice - ALL IN MEMORY, NO DATABASE!"""
-    room_code = data.get('room_code', '').upper()
-    choice = data.get('choice', '').lower()
-    user_id = session.get('user_id')
+    room_code = data.get('room_code', '').upper() if data else ''
+    choice = data.get('choice', '').lower() if data else ''
+    user_id = get_user_id(data)
 
     if not all([room_code, choice, user_id]):
         emit('error', {'message': 'Invalid request'})
@@ -645,8 +712,8 @@ def end_match_in_memory(room_code, winner_id):
 @socketio.on('request_rematch')
 def handle_rematch(data):
     """Handle rematch request - create new game in memory."""
-    room_code = data.get('room_code', '').upper()
-    user_id = session.get('user_id')
+    room_code = data.get('room_code', '').upper() if data else ''
+    user_id = get_user_id(data)
 
     old_game = get_game_state(room_code)
     if not old_game or old_game['status'] != 'finished':
@@ -668,8 +735,8 @@ def handle_rematch(data):
 @socketio.on('get_room_state')
 def handle_get_room_state(data):
     """Get current room state from memory."""
-    room_code = data.get('room_code', '').upper()
-    user_id = session.get('user_id')
+    room_code = data.get('room_code', '').upper() if data else ''
+    user_id = get_user_id(data)
 
     if not room_code or not user_id:
         emit('error', {'message': 'Invalid request'})

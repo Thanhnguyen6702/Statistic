@@ -1283,7 +1283,8 @@
 
             lobbySocket.on('connect', () => {
                 console.log('Socket connected! SID:', lobbySocket.id);
-                lobbySocket.emit('join_lobby');
+                // Send user_id for authentication (backup if session fails)
+                lobbySocket.emit('join_lobby', { user_id: currentUser ? currentUser.id : null });
             });
 
             lobbySocket.on('connected', (data) => {
@@ -1880,7 +1881,15 @@
                 return;
             }
 
-            lobbySocket.emit('create_room', { best_of: selectedBestOf });
+            if (!currentUser) {
+                showNotification('Chưa đăng nhập', 'error');
+                return;
+            }
+
+            lobbySocket.emit('create_room', {
+                best_of: selectedBestOf,
+                user_id: currentUser.id  // Send user_id for auth
+            });
             showNotification('Đang tạo phòng...', 'success');
         }
 
@@ -1896,7 +1905,15 @@
                 return;
             }
 
-            lobbySocket.emit('join_room_by_code', { room_code: code });
+            if (!currentUser) {
+                showNotification('Chưa đăng nhập', 'error');
+                return;
+            }
+
+            lobbySocket.emit('join_room_by_code', {
+                room_code: code,
+                user_id: currentUser.id  // Send user_id for auth
+            });
             showNotification('Đang tham gia phòng...', 'success');
         }
 

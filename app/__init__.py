@@ -32,10 +32,15 @@ def create_app(config_name=None):
 
     # Initialize extensions
     db.init_app(app)
-    socketio.init_app(app)
+    socketio.init_app(app, async_mode='gevent')
 
-    # Import socket events (registers handlers via decorators)
-    from app.sockets import game_events
+    # Import socket events AFTER socketio.init_app
+    # This ensures decorators register to the initialized socketio
+    with app.app_context():
+        from app.sockets import game_events
+        # Force re-registration by touching the module
+        import importlib
+        importlib.reload(game_events)
 
     # Register blueprints
     register_blueprints(app)
